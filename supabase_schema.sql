@@ -86,19 +86,11 @@ CREATE TRIGGER blueprints_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- 7. SAMPLE DATA (Test için)
--- Aşağıdaki satırları kaldırabilirsiniz
-INSERT INTO blueprints (id, name, description, master_goal, nodes, category, is_active)
-VALUES (
-  'demo-001',
-  'Demo Otomasyon',
-  'Test amaçlı demo blueprint',
-  'Sistem testlerini çalıştır',
-  '[{"id": "node-1", "type": "planner", "title": "Test Planner", "role": "Koordinatör", "task": "Test görevlerini planla", "connections": [], "status": "idle"}]'::jsonb,
-  'demo',
-  true
-) ON CONFLICT (id) DO NOTHING;
+-- 7. SAMPLE DATA (Opsiyonel - Kaldırıldı)
+-- Tablolar boş olarak oluşturulacak
+-- OmniFlow uygulamasından blueprint ekleyebilirsiniz
 
 -- ============================================
 -- SETUP COMPLETE!
 -- ============================================
+

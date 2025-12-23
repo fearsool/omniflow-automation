@@ -203,7 +203,16 @@ def main():
     
     # Aktif blueprint'leri getir
     blueprints = get_active_blueprints()
-    print(f"\n📋 {len(blueprints)} aktif blueprint bulundu")
+    
+    # Debug: Gelen veriyi kontrol et
+    print(f"\n📋 Supabase yanıtı: {type(blueprints)}")
+    
+    # Liste olmayanı listeye çevir
+    if not isinstance(blueprints, list):
+        print(f"⚠️ Beklenmeyen format: {blueprints}")
+        blueprints = []
+    
+    print(f"📋 {len(blueprints)} aktif blueprint bulundu")
     
     if not blueprints:
         print("ℹ️ Çalıştırılacak blueprint yok.")
@@ -214,12 +223,29 @@ def main():
     error_count = 0
     
     for bp in blueprints:
+        # Debug: Blueprint türünü kontrol et
+        print(f"\n🔍 Blueprint türü: {type(bp)}")
+        
+        # Eğer bp bir dict değilse atla
+        if not isinstance(bp, dict):
+            print(f"⚠️ Geçersiz blueprint formatı: {bp}")
+            continue
+        
         bp_id = bp.get('id')
-        bp_name = bp.get('name')
-        notify_on = bp.get('notify_on', ['error'])
+        bp_name = bp.get('name', 'İsimsiz')
+        notify_on = bp.get('notify_on') or ['error']
+        
+        print(f"📋 Blueprint: {bp_name} (ID: {bp_id})")
+        
+        if not bp_id:
+            print("⚠️ Blueprint ID bulunamadı, atlaniyor...")
+            continue
         
         # Başlangıç logu
-        log_execution(bp_id, 'running')
+        try:
+            log_execution(bp_id, 'running')
+        except Exception as e:
+            print(f"⚠️ Log hatası: {e}")
         
         # Çalıştır
         success, result = run_blueprint(bp)
@@ -227,15 +253,21 @@ def main():
         # Sonuç logu
         if success:
             success_count += 1
-            log_execution(bp_id, 'success', result=result)
-            update_blueprint_status(bp_id, 'success')
+            try:
+                log_execution(bp_id, 'success', result=result)
+                update_blueprint_status(bp_id, 'success')
+            except Exception as e:
+                print(f"⚠️ Status güncelleme hatası: {e}")
             
             if 'success' in notify_on or 'always' in notify_on:
                 notify('✅ Otomasyon Tamamlandı', f"📋 {bp_name}\n⏰ {datetime.now().strftime('%H:%M')}")
         else:
             error_count += 1
-            log_execution(bp_id, 'error', error=result)
-            update_blueprint_status(bp_id, 'error')
+            try:
+                log_execution(bp_id, 'error', error=result)
+                update_blueprint_status(bp_id, 'error')
+            except Exception as e:
+                print(f"⚠️ Status güncelleme hatası: {e}")
             
             if 'error' in notify_on or 'always' in notify_on:
                 notify('❌ Otomasyon Hatası', f"📋 {bp_name}\n🔴 {result[:200]}")
