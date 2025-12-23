@@ -4,13 +4,90 @@ import { NodeType, WorkflowNode, MarketOpportunity, StepStatus } from "../types"
 
 // Vite uses import.meta.env for browser environment variables
 const apiKey = (import.meta as any).env?.VITE_API_KEY || '';
-const MOCK_MODE = (import.meta as any).env?.VITE_MOCK_MODE === 'true' || !apiKey;
-console.log('API Key loaded:', apiKey ? 'Yes (length: ' + apiKey.length + ')' : 'No');
+const openaiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY || '';
+const MOCK_MODE = (import.meta as any).env?.VITE_MOCK_MODE === 'true' || (!apiKey && !openaiKey);
+console.log('Gemini API Key loaded:', apiKey ? 'Yes (length: ' + apiKey.length + ')' : 'No');
+console.log('OpenAI API Key loaded:', openaiKey ? 'Yes' : 'No');
 console.log('Mock Mode:', MOCK_MODE ? 'ENABLED (API calls will be simulated)' : 'DISABLED');
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // Mock delay to simulate API latency
 const mockDelay = () => new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+
+// ============================================
+// OPENAI FALLBACK FUNCTION
+// Gemini kota dolunca OpenAI kullan
+// ============================================
+
+const callOpenAI = async (prompt: string): Promise<string> => {
+  if (!openaiKey) {
+    throw new Error('OpenAI API key bulunamadı');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${openaiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'OpenAI API hatası');
+  }
+
+  const data = await response.json();
+  return data.choices[0]?.message?.content || '';
+};
+
+// ============================================
+// SMART AI CALL - Gemini önce, sonra OpenAI
+// ============================================
+
+const smartAICall = async (prompt: string, useGemini: boolean = true): Promise<string> => {
+  // Mock mode aktifse simüle et
+  if (MOCK_MODE) {
+    console.log('[MOCK] Simulating AI response...');
+    await mockDelay();
+    return `[Mock Response] Bu bir simülasyon yanıtıdır. Prompt: ${prompt.substring(0, 100)}...`;
+  }
+
+  // Önce Gemini dene
+  if (useGemini && ai) {
+    try {
+      console.log('[AI] Trying Gemini API...');
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: prompt
+      });
+      return response.text || '';
+    } catch (error: any) {
+      console.warn('[AI] Gemini failed, trying OpenAI...', error.message);
+      // 429 hatası veya diğer hatalar için OpenAI'a geç
+    }
+  }
+
+  // OpenAI'a fallback
+  if (openaiKey) {
+    try {
+      console.log('[AI] Using OpenAI fallback...');
+      return await callOpenAI(prompt);
+    } catch (error: any) {
+      console.error('[AI] OpenAI also failed:', error.message);
+    }
+  }
+
+  // Her ikisi de başarısızsa mock yanıt
+  console.log('[AI] All APIs failed, returning mock response');
+  await mockDelay();
+  return `[Fallback] API'ler geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.`;
+};
 
 export const getMarketOpportunities = async (): Promise<MarketOpportunity[]> => {
   const sectors = ["Kripto Arbitraj", "Viral İçerik Fabrikaları", "Otonom E-ticaret", "Yapay Zeka Emlak Yönetimi", "DeFi Otomasyonu"];
