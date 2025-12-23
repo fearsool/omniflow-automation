@@ -9,6 +9,7 @@ import { DeploymentPanel } from './components/DeploymentPanel';
 import { TemplateMarketplace } from './components/TemplateMarketplace';
 import { AgentMonitorDashboard } from './components/AgentMonitorDashboard';
 import { CloudSettings } from './components/CloudSettings';
+import { ImageGenerator } from './components/ImageGenerator';
 import { architectSystem, runAgentNode, getMarketOpportunities, autoFillField, generateDiscoveryQuestions } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [showTemplates, setShowTemplates] = useState(false); // Template Marketplace
   const [showAgentMonitor, setShowAgentMonitor] = useState(false); // Agent Health Monitor
   const [showCloudSettings, setShowCloudSettings] = useState(false); // Cloud Settings
+  const [showImageGenerator, setShowImageGenerator] = useState(false); // Image Generator
   const [selectedBlueprint, setSelectedBlueprint] = useState<SystemBlueprint | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -291,6 +293,14 @@ const App: React.FC = () => {
           onClose={() => setShowCloudSettings(false)}
         />
       )}
+      {showImageGenerator && (
+        <ImageGenerator
+          onImageGenerated={(imageUrl, prompt) => {
+            addLog(`🎨 Görsel üretildi: ${prompt.substring(0, 30)}...`, 'success');
+          }}
+          onClose={() => setShowImageGenerator(false)}
+        />
+      )}
 
       {/* SIDEBAR NAVIGATION */}
       <nav className="w-20 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-10 gap-8 z-50">
@@ -302,6 +312,7 @@ const App: React.FC = () => {
         <NavItem active={activeView === 'deploy'} icon="🚀" onClick={() => setActiveView('deploy')} title="DEPLOY" />
         <NavItem active={activeView === 'monitor'} icon="🩺" onClick={() => setActiveView('monitor')} title="MONİTÖR" />
         <NavItem active={false} icon="☁️" onClick={() => setShowCloudSettings(true)} title="CLOUD" />
+        <NavItem active={false} icon="🎨" onClick={() => setShowImageGenerator(true)} title="GÖRSEL" />
         <NavItem active={activeView === 'vault'} icon="📂" onClick={() => setActiveView('vault')} title="KASA" />
       </nav>
 
