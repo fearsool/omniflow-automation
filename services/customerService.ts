@@ -373,6 +373,251 @@ export const SELLABLE_TEMPLATES: SellableTemplate[] = [
         soldCount: 89,
         rating: 4.9,
         reviews: 56
+    },
+    // ============ YENİ ŞABLONLAR ============
+    {
+        id: 'email-marketing-pro',
+        name: 'E-posta Pazarlama Otomasyonu',
+        description: 'AI ile e-posta kampanyaları oluştur, A/B test yap, otomatik takip gönder.',
+        category: 'Pazarlama',
+        pricing: { oneTime: 4000, monthly: 800, setupFee: 1500, currency: 'TRY' },
+        features: [
+            '📧 AI ile email yazımı',
+            '🎯 Kişiselleştirme',
+            '📊 A/B test',
+            '⏰ Otomatik takip',
+            '📈 Açılma/tıklama analizi',
+            '🔄 Drip kampanyalar'
+        ],
+        requirements: ['SendGrid veya SMTP', 'Email listesi'],
+        customizableFields: [
+            { id: 'brandName', name: 'brandName', label: 'Marka Adı', type: 'text', required: true },
+            { id: 'senderEmail', name: 'senderEmail', label: 'Gönderen Email', type: 'text', required: true },
+            { id: 'sendgridKey', name: 'sendgridKey', label: 'SendGrid API Key', type: 'api_key', required: true },
+            { id: 'industry', name: 'industry', label: 'Sektör', type: 'text', required: true }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'writer', title: 'Email Yazıcı' }, { type: 'sender', title: 'Gönderici' }, { type: 'tracker', title: 'Takipçi' }] },
+        soldCount: 56, rating: 4.7, reviews: 31
+    },
+    {
+        id: 'dropshipping-price-tracker',
+        name: 'Dropshipping Fiyat Takip',
+        description: 'AliExpress/Trendyol fiyat takibi, stok uyarıları ve otomatik fiyat güncelleme.',
+        category: 'E-Ticaret',
+        pricing: { oneTime: 5000, monthly: 1000, setupFee: 2000, currency: 'TRY' },
+        features: [
+            '🔍 Fiyat scraping',
+            '📉 Fiyat düşüş bildirimi',
+            '📦 Stok takibi',
+            '🔄 Otomatik fiyat güncelleme',
+            '📊 Kâr marjı hesaplama',
+            '⚠️ Rakip uyarıları'
+        ],
+        requirements: ['E-ticaret mağazası URL', 'Ürün listesi'],
+        customizableFields: [
+            { id: 'storeUrl', name: 'storeUrl', label: 'Mağaza URL', type: 'text', required: true },
+            { id: 'supplierSites', name: 'supplierSites', label: 'Tedarikçi Siteler', type: 'text', required: true, defaultValue: 'AliExpress, Temu' },
+            { id: 'profitMargin', name: 'profitMargin', label: 'Min. Kâr Marjı (%)', type: 'number', required: true, defaultValue: 30 },
+            { id: 'telegramToken', name: 'telegramToken', label: 'Telegram Bot Token', type: 'api_key', required: false }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'scraper', title: 'Fiyat Scraper' }, { type: 'calculator', title: 'Kâr Hesaplayıcı' }, { type: 'notifier', title: 'Bildirimci' }] },
+        soldCount: 73, rating: 4.8, reviews: 44
+    },
+    {
+        id: 'seo-blog-writer',
+        name: 'SEO Blog Yazıcı',
+        description: 'AI ile SEO uyumlu blog yazıları üret, anahtar kelime optimizasyonu ve otomatik yayınlama.',
+        category: 'İçerik',
+        pricing: { oneTime: 6000, monthly: 1200, setupFee: 2000, currency: 'TRY' },
+        features: [
+            '✍️ AI blog yazımı',
+            '🔍 Anahtar kelime araştırma',
+            '📊 SEO skoru analizi',
+            '🖼️ Görsel önerisi',
+            '📝 Meta description',
+            '🚀 WordPress otomatik yayın'
+        ],
+        requirements: ['WordPress sitesi (opsiyonel)', 'Hedef anahtar kelimeler'],
+        customizableFields: [
+            { id: 'websiteUrl', name: 'websiteUrl', label: 'Website URL', type: 'text', required: true },
+            { id: 'niche', name: 'niche', label: 'Blog Konusu/Niş', type: 'text', required: true, placeholder: 'Teknoloji, Sağlık, Finans' },
+            { id: 'targetKeywords', name: 'targetKeywords', label: 'Hedef Anahtar Kelimeler', type: 'text', required: true },
+            { id: 'postsPerWeek', name: 'postsPerWeek', label: 'Haftalık Yazı Sayısı', type: 'number', required: true, defaultValue: 3 },
+            { id: 'wordpressApiKey', name: 'wordpressApiKey', label: 'WordPress API Key', type: 'api_key', required: false }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'researcher', title: 'Keyword Araştırmacı' }, { type: 'writer', title: 'Blog Yazıcı' }, { type: 'optimizer', title: 'SEO Optimizer' }, { type: 'publisher', title: 'Yayıncı' }] },
+        soldCount: 92, rating: 4.9, reviews: 58
+    },
+    {
+        id: 'tiktok-viral-creator',
+        name: 'TikTok Viral Video Üretici',
+        description: 'Trend analizi, video scripti yazımı, caption ve hashtag önerisi.',
+        category: 'Sosyal Medya',
+        pricing: { oneTime: 3500, monthly: 700, setupFee: 1000, currency: 'TRY' },
+        features: [
+            '🔥 Trend ses/format analizi',
+            '📝 Video scripti yazımı',
+            '🎙️ TTS seslendirme',
+            '#️⃣ Viral hashtag seti',
+            '📊 Performans tahmini',
+            '⏰ Optimal paylaşım zamanı'
+        ],
+        requirements: ['TikTok hesabı', 'Hedef niş'],
+        customizableFields: [
+            { id: 'accountName', name: 'accountName', label: 'TikTok Kullanıcı Adı', type: 'text', required: true },
+            { id: 'niche', name: 'niche', label: 'İçerik Nişi', type: 'text', required: true, placeholder: 'Komedi, Eğitim, Dans' },
+            { id: 'videosPerDay', name: 'videosPerDay', label: 'Günlük Video Sayısı', type: 'number', required: true, defaultValue: 3 },
+            { id: 'voiceGender', name: 'voiceGender', label: 'Seslendirme', type: 'select', required: true, options: [{ value: 'female', label: 'Kadın' }, { value: 'male', label: 'Erkek' }] }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'analyzer', title: 'Trend Analyzer' }, { type: 'writer', title: 'Script Writer' }, { type: 'tts', title: 'Voice Generator' }] },
+        soldCount: 124, rating: 4.7, reviews: 78
+    },
+    {
+        id: 'linkedin-autopost',
+        name: 'LinkedIn Autopost & Engagement',
+        description: 'LinkedIn için profesyonel içerik üret, otomatik paylaş ve etkileşim artır.',
+        category: 'Sosyal Medya',
+        pricing: { oneTime: 4500, monthly: 900, setupFee: 1500, currency: 'TRY' },
+        features: [
+            '📝 Profesyonel post yazımı',
+            '📊 Sektör trend analizi',
+            '🤝 Bağlantı önerileri',
+            '💬 Yorum yanıtlama',
+            '📈 Profil görünürlük artışı',
+            '⏰ Optimal zamanlama'
+        ],
+        requirements: ['LinkedIn hesabı', 'Profesyonel alan bilgisi'],
+        customizableFields: [
+            { id: 'fullName', name: 'fullName', label: 'Ad Soyad', type: 'text', required: true },
+            { id: 'jobTitle', name: 'jobTitle', label: 'Unvan', type: 'text', required: true, placeholder: 'CEO, Pazarlama Müdürü' },
+            { id: 'industry', name: 'industry', label: 'Sektör', type: 'text', required: true },
+            { id: 'postsPerWeek', name: 'postsPerWeek', label: 'Haftalık Post', type: 'number', required: true, defaultValue: 5 },
+            { id: 'tone', name: 'tone', label: 'Yazım Tonu', type: 'select', required: true, options: [{ value: 'thought-leader', label: 'Düşünce Lideri' }, { value: 'mentor', label: 'Mentor' }, { value: 'storyteller', label: 'Hikaye Anlatıcı' }] }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'researcher', title: 'Trend Araştırmacı' }, { type: 'writer', title: 'Content Writer' }, { type: 'scheduler', title: 'Zamanlayıcı' }] },
+        soldCount: 67, rating: 4.6, reviews: 39
+    },
+    {
+        id: 'real-estate-listing',
+        name: 'Emlak İlan Botu',
+        description: 'Sahibinden/Hepsiemlak ilanları oluştur, açıklama yaz ve fotoğraf düzenle.',
+        category: 'Emlak',
+        pricing: { oneTime: 5500, monthly: 1100, setupFee: 2000, currency: 'TRY' },
+        features: [
+            '🏠 İlan açıklaması yazımı',
+            '📸 Fotoğraf optimizasyonu',
+            '📊 Fiyat analizi',
+            '🔄 Çoklu platform paylaşım',
+            '📱 WhatsApp entegrasyonu',
+            '📈 Görüntülenme takibi'
+        ],
+        requirements: ['Emlak portföyü', 'İlan platformu hesabı'],
+        customizableFields: [
+            { id: 'agencyName', name: 'agencyName', label: 'Emlak Ofisi Adı', type: 'text', required: true },
+            { id: 'city', name: 'city', label: 'Şehir', type: 'text', required: true, defaultValue: 'İstanbul' },
+            { id: 'propertyTypes', name: 'propertyTypes', label: 'Mülk Tipleri', type: 'text', required: true, defaultValue: 'Daire, Villa, Ofis' },
+            { id: 'whatsappNumber', name: 'whatsappNumber', label: 'WhatsApp Numarası', type: 'text', required: true }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'writer', title: 'İlan Yazıcı' }, { type: 'optimizer', title: 'Fotoğraf Optimizer' }, { type: 'publisher', title: 'Yayıncı' }] },
+        soldCount: 45, rating: 4.8, reviews: 27
+    },
+    {
+        id: 'invoice-automation',
+        name: 'Fatura Otomasyonu',
+        description: 'Otomatik fatura oluştur, gönder, hatırlat ve tahsilat takibi yap.',
+        category: 'Finans',
+        pricing: { oneTime: 3000, monthly: 600, setupFee: 1000, currency: 'TRY' },
+        features: [
+            '🧾 Otomatik fatura oluşturma',
+            '📧 Email ile gönderim',
+            '⏰ Vade hatırlatma',
+            '💰 Tahsilat takibi',
+            '📊 Gelir raporları',
+            '📱 Mobil bildirim'
+        ],
+        requirements: ['Müşteri listesi', 'Email hesabı'],
+        customizableFields: [
+            { id: 'companyName', name: 'companyName', label: 'Şirket Adı', type: 'text', required: true },
+            { id: 'taxNumber', name: 'taxNumber', label: 'Vergi No', type: 'text', required: true },
+            { id: 'bankInfo', name: 'bankInfo', label: 'Banka Bilgileri', type: 'text', required: true },
+            { id: 'currency', name: 'currency', label: 'Para Birimi', type: 'select', required: true, options: [{ value: 'TRY', label: '₺ TRY' }, { value: 'USD', label: '$ USD' }, { value: 'EUR', label: '€ EUR' }] },
+            { id: 'reminderDays', name: 'reminderDays', label: 'Hatırlatma (gün önce)', type: 'number', required: true, defaultValue: 3 }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'generator', title: 'Fatura Üretici' }, { type: 'sender', title: 'Email Gönderici' }, { type: 'tracker', title: 'Tahsilat Takipçi' }] },
+        soldCount: 78, rating: 4.9, reviews: 52
+    },
+    {
+        id: 'competitor-monitor',
+        name: 'Rakip İzleme Botu',
+        description: 'Rakip fiyat, ürün ve içerik değişikliklerini takip et ve bildirim al.',
+        category: 'Veri & Analiz',
+        pricing: { oneTime: 4500, monthly: 900, setupFee: 1500, currency: 'TRY' },
+        features: [
+            '🔍 Rakip web scraping',
+            '💰 Fiyat karşılaştırma',
+            '📦 Yeni ürün tespiti',
+            '📊 Haftalık raporlar',
+            '🔔 Anlık bildirimler',
+            '📈 Trend analizi'
+        ],
+        requirements: ['Rakip URL listesi', 'Telegram (bildirim için)'],
+        customizableFields: [
+            { id: 'competitorUrls', name: 'competitorUrls', label: 'Rakip Siteler', type: 'text', required: true, placeholder: 'www.rakip1.com, www.rakip2.com' },
+            { id: 'trackingItems', name: 'trackingItems', label: 'Takip Edilecekler', type: 'text', required: true, defaultValue: 'Fiyat, Ürün, Blog' },
+            { id: 'checkFrequency', name: 'checkFrequency', label: 'Kontrol Sıklığı', type: 'select', required: true, options: [{ value: 'hourly', label: 'Saatlik' }, { value: 'daily', label: 'Günlük' }, { value: 'weekly', label: 'Haftalık' }] },
+            { id: 'telegramToken', name: 'telegramToken', label: 'Telegram Bot Token', type: 'api_key', required: true }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'scraper', title: 'Web Scraper' }, { type: 'comparator', title: 'Karşılaştırıcı' }, { type: 'reporter', title: 'Raporlayıcı' }] },
+        soldCount: 54, rating: 4.7, reviews: 33
+    },
+    {
+        id: 'stock-inventory-bot',
+        name: 'Stok Takip Botu',
+        description: 'Stok seviyelerini izle, düşük stok uyarısı ver ve sipariş öner.',
+        category: 'E-Ticaret',
+        pricing: { oneTime: 3500, monthly: 700, setupFee: 1000, currency: 'TRY' },
+        features: [
+            '📦 Gerçek zamanlı stok takibi',
+            '⚠️ Düşük stok uyarısı',
+            '📊 Satış tahminleri',
+            '🛒 Otomatik sipariş önerisi',
+            '📈 Stok devir hızı analizi',
+            '📱 Mobil bildirim'
+        ],
+        requirements: ['Ürün listesi', 'E-ticaret platformu'],
+        customizableFields: [
+            { id: 'storeName', name: 'storeName', label: 'Mağaza Adı', type: 'text', required: true },
+            { id: 'platform', name: 'platform', label: 'Platform', type: 'select', required: true, options: [{ value: 'trendyol', label: 'Trendyol' }, { value: 'hepsiburada', label: 'Hepsiburada' }, { value: 'n11', label: 'N11' }, { value: 'shopify', label: 'Shopify' }] },
+            { id: 'lowStockThreshold', name: 'lowStockThreshold', label: 'Düşük Stok Eşiği', type: 'number', required: true, defaultValue: 10 },
+            { id: 'telegramToken', name: 'telegramToken', label: 'Telegram Bot Token', type: 'api_key', required: false }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'tracker', title: 'Stok Takipçi' }, { type: 'analyzer', title: 'Satış Analizci' }, { type: 'notifier', title: 'Uyarıcı' }] },
+        soldCount: 61, rating: 4.8, reviews: 38
+    },
+    {
+        id: 'online-course-assistant',
+        name: 'Online Kurs Asistanı',
+        description: 'Öğrenci sorularını yanıtla, ilerleme takibi yap ve hatırlatmalar gönder.',
+        category: 'Eğitim',
+        pricing: { oneTime: 4000, monthly: 800, setupFee: 1500, currency: 'TRY' },
+        features: [
+            '❓ Otomatik soru yanıtlama',
+            '📈 İlerleme takibi',
+            '⏰ Ders hatırlatmaları',
+            '📝 Ödev takibi',
+            '🏆 Sertifika oluşturma',
+            '💬 Telegram/WhatsApp destek'
+        ],
+        requirements: ['Kurs içeriği', 'Öğrenci listesi'],
+        customizableFields: [
+            { id: 'courseName', name: 'courseName', label: 'Kurs Adı', type: 'text', required: true },
+            { id: 'instructorName', name: 'instructorName', label: 'Eğitmen Adı', type: 'text', required: true },
+            { id: 'coursePlatform', name: 'coursePlatform', label: 'Platform', type: 'select', required: true, options: [{ value: 'udemy', label: 'Udemy' }, { value: 'teachable', label: 'Teachable' }, { value: 'custom', label: 'Kendi Sitem' }] },
+            { id: 'telegramToken', name: 'telegramToken', label: 'Telegram Bot Token', type: 'api_key', required: true },
+            { id: 'faqContent', name: 'faqContent', label: 'SSS İçeriği', type: 'text', required: true, placeholder: 'Kurs hakkında sık sorulan sorular...' }
+        ],
+        blueprintTemplate: { nodes: [{ type: 'receiver', title: 'Soru Alıcı' }, { type: 'responder', title: 'AI Yanıtlayıcı' }, { type: 'tracker', title: 'İlerleme Takipçi' }] },
+        soldCount: 43, rating: 4.9, reviews: 28
     }
 ];
 
