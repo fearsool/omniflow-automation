@@ -143,6 +143,16 @@ const App: React.FC = () => {
     }
   };
 
+  // --- CLEAR WORKSPACE ---
+  const clearWorkspace = () => {
+    setSelectedBlueprint(null);
+    setGoal('');
+    setDiscoveryQuestions([]);
+    setShowDiscovery(false);
+    setLogs([]);
+    addLog("🧹 Çalışma alanı temizlendi. Yeni otomasyon oluşturabilirsiniz.", "success");
+  };
+
   // --- SANDBOX LOGIC ---
   const updateTestVariable = (idx: number, updates: Partial<TestVariable>) => {
     if (!selectedBlueprint) return;
@@ -303,7 +313,7 @@ const App: React.FC = () => {
       )}
 
       {/* SIDEBAR NAVIGATION */}
-      <nav className="w-20 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-10 gap-8 z-50">
+      <nav className="w-20 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-6 gap-4 z-50 overflow-y-auto">
         <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-600/20" onClick={() => setActiveView('factory')}><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
         <NavItem active={activeView === 'insights'} icon="💎" onClick={() => setActiveView('insights')} title="RADAR" />
         <NavItem active={activeView === 'factory'} icon="🏗️" onClick={() => setActiveView('factory')} title="MİMAR" />
@@ -313,6 +323,7 @@ const App: React.FC = () => {
         <NavItem active={activeView === 'monitor'} icon="🩺" onClick={() => setActiveView('monitor')} title="MONİTÖR" />
         <NavItem active={false} icon="☁️" onClick={() => setShowCloudSettings(true)} title="CLOUD" />
         <NavItem active={false} icon="🎨" onClick={() => setShowImageGenerator(true)} title="GÖRSEL" />
+        <NavItem active={false} icon="🧹" onClick={clearWorkspace} title="TEMİZLE" />
         <NavItem active={activeView === 'vault'} icon="📂" onClick={() => setActiveView('vault')} title="KASA" />
       </nav>
 
