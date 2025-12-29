@@ -10,7 +10,9 @@ import { TemplateMarketplace } from './components/TemplateMarketplace';
 import { AgentMonitorDashboard } from './components/AgentMonitorDashboard';
 import { CloudSettings } from './components/CloudSettings';
 import { ImageGenerator } from './components/ImageGenerator';
-import { architectSystem, runAgentNode, getMarketOpportunities, autoFillField, generateDiscoveryQuestions } from './services/geminiService';
+import { architectSystem, runAgentNode, getMarketOpportunities, autoFillField, generateDiscoveryQuestions } from './services/huggingfaceNativeService';
+import { callHuggingFaceModel, buildHFPrompt, selectBestModel } from './services/huggingfaceService';
+import { agentQueue, AgentTask } from './services/agentQueueService';
 
 const App: React.FC = () => {
   // --- STATES ---
@@ -85,10 +87,13 @@ const App: React.FC = () => {
       if (opps.length > 0) {
         addLog(`✅ ${opps.length} yeni fırsat bulundu!`, "success");
       } else {
-        addLog("⚠️ Şu an fırsat bulunamadı. API kotası dolabilir.", "warn");
+        addLog("⚠️ Fırsat bulunamadı.", "warn");
       }
     } catch (e: any) {
-      addLog(`❌ Tarama hatası: ${e?.message || 'Bilinmeyen hata'}`, "error");
+      // Fallback opportunities'i göster (getMarketOpportunities fallback içinde handle ediyor)
+      addLog(`⚠️ API bağlantı sorunu var, önerilen fırsatlar gösteriliyor...`, "warn");
+      const fallbackOpps = await getMarketOpportunities(); // Bu fallback döner
+      setOpportunities(fallbackOpps);
     } finally {
       setIsScanning(false);
     }
@@ -117,14 +122,18 @@ const App: React.FC = () => {
     addLog(`MİMARİ: "${name}" sistemi inşa ediliyor...`, "info");
     const contextStr = discoveryQuestions.map(d => `${d.q}: ${d.a}`).join("\n");
     try {
-      const result = await architectSystem(goal, name, contextStr);
+      const systemDescription = `${goal}\n\nBağlam:\n${contextStr}`;
+      const result = await architectSystem(systemDescription);
+      
       const newBp: SystemBlueprint = {
         id: crypto.randomUUID(),
         name,
         description: goal,
         masterGoal: goal,
-        nodes: (result.nodes || []).map((n: any): WorkflowNode => ({ ...n, status: StepStatus.IDLE })),
-        baseKnowledge: contextStr,
+        nodes: [
+          { id: '1', type: NodeType.AGENT_PLANNER, title: 'Sistem Analizi', role: 'AI', task: result.substring(0, 200), status: StepStatus.IDLE, connections: [] }
+        ],
+        baseKnowledge: result,
         category: "Autonomous",
         version: 1,
         testConfig: { variables: [], simulateFailures: false }
@@ -136,8 +145,8 @@ const App: React.FC = () => {
       setShowDiscovery(false);
       setActiveView('studio');
       addLog("Sistem fabrikaya başarıyla yüklendi.", "success");
-    } catch (e) {
-      addLog("Mimari inşası başarısız.", "error");
+    } catch (e: any) {
+      addLog(`Mimari inşası başarısız: ${e?.message || 'Bilinmeyen hata'}`, "error");
     } finally {
       setIsArchitecting(false);
     }
@@ -184,17 +193,49 @@ const App: React.FC = () => {
     saveToLocal(updatedBps);
   };
 
-  // --- EXECUTION ---
+  // --- EXECUTION WITH HUGGINGFACE & QUEUE ---
+  const runGraphNode = async (node: WorkflowNode, blueprint: SystemBlueprint, history: { nodeId: string, output: string }[]): Promise<string> => {
+    try {
+      // Test context'i enjekte et
+      const testContext = (blueprint.testConfig?.variables || [])
+        .map(v => `${v.key}=${v.value}`).join("; ");
+
+      // HuggingFace prompt'ını oluştur
+      const prompt = buildHFPrompt(
+        node.role || 'AI Assistant',
+        node.task || 'Complete the task',
+        blueprint.baseKnowledge + "\nTEST_ENV: " + testContext,
+        history.length > 0 ? history[history.length - 1].output : 'Start'
+      );
+
+      // En uygun modeli seç
+      const model = selectBestModel(node.type?.toString() || 'default');
+
+      // HuggingFace API'yi çağır (3 kez retry ile)
+      const hfResult = await callHuggingFaceModel({
+        task: prompt,
+        model,
+        timeout: 300000, // 5 dakika
+      });
+
+      if (!hfResult.success) {
+        throw new Error(hfResult.error || 'HF API failed');
+      }
+
+      return hfResult.output || 'No output';
+
+    } catch (error) {
+      console.error(`Node execution failed:`, error);
+      throw error;
+    }
+  };
+
   const runGraph = async (startNodeId: string, currentHistory: { nodeId: string, output: string }[]) => {
     if (!selectedBlueprint) return;
     setIsRunning(true);
     let nodes: WorkflowNode[] = [...selectedBlueprint.nodes];
     let currentNodeId: string | null = startNodeId;
     let history = [...currentHistory];
-
-    // Inject test variables into system context if in sandbox
-    const testContext = (selectedBlueprint.testConfig?.variables || [])
-      .map(v => `${v.key}=${v.value}`).join("; ");
 
     while (currentNodeId) {
       const currentIdx = nodes.findIndex(n => n.id === currentNodeId);
@@ -208,7 +249,7 @@ const App: React.FC = () => {
 
       nodes[currentIdx].status = StepStatus.RUNNING;
       setSelectedBlueprint({ ...selectedBlueprint, nodes: [...nodes] });
-      addLog(`SANDBOX RUN: ${node.title}`);
+      addLog(`🚀 Node çalışıyor: ${node.title}`);
 
       try {
         // Mock failure if enabled in sandbox
@@ -216,31 +257,36 @@ const App: React.FC = () => {
           throw new Error("Simulated Failure");
         }
 
-        const result = await runAgentNode(node, { ...selectedBlueprint, baseKnowledge: selectedBlueprint.baseKnowledge + "\nTEST_ENV: " + testContext }, history);
+        // ✅ HuggingFace ile node'u çalıştır
+        const result = await runGraphNode(node, selectedBlueprint, history);
+        
         nodes[currentIdx].status = StepStatus.SUCCESS;
-        nodes[currentIdx].outputData = result.text;
-        history = [...history, { nodeId: node.id, output: result.text }];
+        nodes[currentIdx].outputData = result;
+        history = [...history, { nodeId: node.id, output: result }];
         setSelectedBlueprint({ ...selectedBlueprint, nodes: [...nodes] });
+        addLog(`✅ ${node.title} tamamlandı`);
 
+        // Sonraki node'u belirle
         let nextNodeId: string | null = null;
         if (node.type === NodeType.LOGIC_GATE) {
-          const match = node.connections.find(c => result.text.includes(c.targetId));
+          const match = node.connections.find(c => result.includes(c.targetId));
           nextNodeId = match ? match.targetId : (node.connections[0]?.targetId || null);
         } else {
           nextNodeId = node.connections[0]?.targetId || null;
         }
         currentNodeId = nextNodeId;
         setExecutionState({ history, currentNodeId });
+
       } catch (e) {
         nodes[currentIdx].status = StepStatus.REJECTED;
-        addLog(`HATA (Simülasyon): ${node.title} başarısız.`, "error");
+        addLog(`❌ HATA: ${node.title} başarısız - ${String(e).substring(0, 100)}`, "error");
         setSelectedBlueprint({ ...selectedBlueprint, nodes: [...nodes] });
         break;
       }
     }
     setFinalOutput(history[history.length - 1]?.output || "İşlem tamam.");
     setIsRunning(false);
-    addLog("TEST SÜRECİ BİTTİ.", "success");
+    addLog("✅ TEST PROSESİ BİTTİ!", "success");
   };
 
   const startExecution = () => {

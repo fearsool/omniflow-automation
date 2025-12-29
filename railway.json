@@ -1,0 +1,13 @@
+{
+    "name": "omniflow-automation",
+    "version": "1.0.0",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "start": "npx serve dist -s -l $PORT",
+        "preview": "vite preview"
+    }
+}

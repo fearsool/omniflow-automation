@@ -4,7 +4,7 @@
 // ============================================
 
 const HF_TOKEN = (import.meta as any).env?.VITE_HUGGINGFACE_TOKEN || '';
-const HF_API_URL = 'https://api-inference.huggingface.co/models';
+const HF_API_URL = 'https://router.huggingface.co/models';
 
 // Available models for different purposes
 export const HF_MODELS = {

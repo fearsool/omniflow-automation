@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # OmniFlow Runner - HuggingFace Native (0 Maliyet)
+  omniflow-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    environment:
+      # HuggingFace (Free)
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
+      
+      # Supabase (for automation storage)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_KEY: ${SUPABASE_KEY}
+      
+      # Ollama (Optional local models)
+      USE_OLLAMA: ${USE_OLLAMA:-false}
+      OLLAMA_URL: http://ollama:11434
+      
+      # Notifications
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      DISCORD_WEBHOOK: ${DISCORD_WEBHOOK}
+      
+      # Settings
+      REQUEST_TIMEOUT: '300'
+      MAX_RETRIES: '3'
+      DB_FILE: /app/data/automation_runner.db
+    
+    volumes:
+      - ./data:/app/data
+      - ./runner.py:/app/runner.py:ro
+    
+    restart: unless-stopped
+    networks:
+      - omniflow
+    
+    depends_on:
+      - ollama
+    
+    # Health check
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import sqlite3; sqlite3.connect("/app/data/automation_runner.db").execute("SELECT 1")']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Ollama - Local Models (Completely Free)
+  # Uncomment to use local models instead of HF API
+  ollama:
+    image: ollama/ollama:latest
+    container_name: omniflow-ollama
+    
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    
+    volumes:
+      - ./ollama_data:/root/.ollama
+    
+    ports:
+      - "11434:11434"
+    
+    networks:
+      - omniflow
+    
+    # Preload models (optional)
+    # entrypoint: ollama serve
+    
+    restart: unless-stopped
+    
+    # Lower resource usage for small servers
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '1'
+    #       memory: 2G
+
+networks:
+  omniflow:
+    driver: bridge
+
+volumes:
+  ollama_data:
+    driver: local

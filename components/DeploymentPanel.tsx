@@ -20,7 +20,7 @@ const platforms: { id: DeployPlatform; name: string; icon: string; url: string; 
 export const DeploymentPanel: React.FC<DeploymentPanelProps> = ({ blueprint, onClose }) => {
     const [selectedPlatform, setSelectedPlatform] = useState<DeployPlatform>('railway');
     const [envVars, setEnvVars] = useState<{ key: string; value: string }[]>([
-        { key: 'GEMINI_API_KEY', value: '' },
+        { key: 'HUGGINGFACE_TOKEN', value: '' },
         { key: 'NODE_ENV', value: 'production' }
     ]);
     const [deployStatus, setDeployStatus] = useState<'idle' | 'preparing' | 'ready'>('idle');
@@ -162,8 +162,8 @@ ${envVars.map(e => `${e.key}=${e.value || 'YOUR_VALUE'}`).join('\n')}
                             key={platform.id}
                             onClick={() => { setSelectedPlatform(platform.id); setDeployStatus('idle'); }}
                             className={`p-4 rounded-xl border-2 transition-all text-left ${selectedPlatform === platform.id
-                                    ? 'border-emerald-500 bg-emerald-500/10'
-                                    : 'border-slate-800 hover:border-slate-600'
+                                ? 'border-emerald-500 bg-emerald-500/10'
+                                : 'border-slate-800 hover:border-slate-600'
                                 }`}
                         >
                             <span className="text-2xl">{platform.icon}</span>
