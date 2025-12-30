@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💇 Kuaför Carousel Oluşturucu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+    </style>
+</head>
+
+<body class="text-white p-6">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- HEADER -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-black">💇 Instagram Carousel Oluşturucu</h1>
+                <p class="text-slate-400">Görsel üzerine yazı - Hazır paylaşım</p>
+            </div>
+            <button onclick="generateCarousel()" id="genBtn" class="gradient-btn px-6 py-3 rounded-xl font-bold">
+                ✨ Carousel Oluştur
+            </button>
+        </header>
+
+        <!-- API KEY INPUT -->
+        <div class="glass rounded-2xl p-6 mb-6 border border-slate-700">
+            <h2 class="font-bold mb-4">🔑 API Ayarları</h2>
+            <label class="text-xs text-slate-400 block mb-1">Hugging Face Token</label>
+            <input type="password" id="hfToken" placeholder="hf_..."
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3">
+            <p class="text-xs text-slate-500 mt-2">Token tarayıcıda saklanır, sunucuya gönderilmez.</p>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="glass rounded-2xl p-6 mb-6 border border-slate-700">
+            <h2 class="font-bold mb-4">⚙️ Konu ve Ayarlar</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <label class="text-xs text-slate-400 block mb-1">İçerik Konusu</label>
+                    <input type="text" id="topic" value="Kış ayında saç bakımı için 5 ipucu"
+                        class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Slide Sayısı</label>
+                    <select id="slideCount" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3">
+                        <option value="3">3 Slide</option>
+                        <option value="5" selected>5 Slide</option>
+                        <option value="7">7 Slide</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mt-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Arka Plan Rengi</label>
+                    <input type="color" id="bgColor" value="#1a1a3e" class="w-full h-10 rounded cursor-pointer">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Metin Rengi</label>
+                    <input type="color" id="textColor" value="#ffffff" class="w-full h-10 rounded cursor-pointer">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Vurgu Rengi</label>
+                    <input type="color" id="accentColor" value="#ec4899" class="w-full h-10 rounded cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <!-- STATUS -->
+        <div id="status"
+            class="hidden glass rounded-2xl p-4 mb-6 border border-yellow-500/50 text-yellow-400 text-center">
+            ⏳ Görseller oluşturuluyor...
+        </div>
+
+        <!-- CAROUSEL PREVIEW -->
+        <div id="carouselPreview" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-xl">📸 Carousel Görselleri</h2>
+                <button onclick="downloadAll()" class="bg-emerald-600 px-4 py-2 rounded-lg font-bold">
+                    ⬇️ Tümünü İndir
+                </button>
+            </div>
+            <div id="slides" class="grid grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- CAPTION -->
+        <div id="captionSection" class="hidden mt-6 glass rounded-2xl p-6 border border-slate-700">
+            <h3 class="font-bold mb-3">📝 Hazır Caption</h3>
+            <div id="caption" class="bg-slate-800 rounded-lg p-4 text-sm"></div>
+            <button onclick="copyCaption()" class="mt-3 bg-slate-700 px-4 py-2 rounded-lg text-sm">📋 Kopyala</button>
+        </div>
+
+        <script>
+            // Token'ı localStorage'dan al varsa
+            document.addEventListener('DOMContentLoaded', () => {
+                const savedToken = localStorage.getItem('hf_token');
+                if (savedToken) document.getElementById('hfToken').value = savedToken;
+            });
+
+            async function callAI(prompt) {
+                const token = document.getElementById('hfToken').value;
+                if (!token) {
+                    throw new Error("Lütfen Hugging Face Token giriniz!");
+                }
+                localStorage.setItem('hf_token', token); // Token'ı hatırla
+
+                const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'google/gemma-2-2b-it',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 1024,
+                        temperature: 0.7
+                    })
+                });
+                const data = await response.json();
+                return data.choices?.[0]?.message?.content || '';
+            }
+
+            async function generateCarousel() {
+                const topic = document.getElementById('topic').value;
+                const slideCount = parseInt(document.getElementById('slideCount').value);
+                const bgColor = document.getElementById('bgColor').value;
+                const textColor = document.getElementById('textColor').value;
+                const accentColor = document.getElementById('accentColor').value;
+
+                document.getElementById('status').classList.remove('hidden');
+                document.getElementById('genBtn').disabled = true;
+                document.getElementById('genBtn').textContent = '⏳ Oluşturuluyor...';
+
+                try {
+                    // AI'dan içerik al
+                    const prompt = `"${topic}" konusu için ${slideCount} slide'lık Instagram carousel içeriği oluştur.
+
+Her slide için SADECE kısa metin ver (maksimum 15 kelime):
+SLIDE 1: [Dikkat çekici başlık/soru]
+SLIDE 2: [1. İpucu - kısa]
+SLIDE 3: [2. İpucu - kısa]
+...
+SON SLIDE: [CTA - Takip et, Kaydet vs]
+
+Türkçe yaz. Emoji kullan. Her slide tek satır olsun.`;
+
+                    const aiResponse = await callAI(prompt);
+                    const slides = parseSlides(aiResponse, slideCount);
+
+                    // Canvas ile görsel oluştur
+                    const slidesContainer = document.getElementById('slides');
+                    slidesContainer.innerHTML = '';
+
+                    slides.forEach((text, index) => {
+                        const canvas = createSlideCanvas(text, index + 1, slides.length, bgColor, textColor, accentColor);
+
+                        const div = document.createElement('div');
+                        div.className = 'relative';
+                        div.innerHTML = `
+                        <img src="${canvas.toDataURL()}" class="rounded-xl w-full" />
+                        <button onclick="downloadSlide(this, ${index + 1})" 
+                            class="absolute bottom-2 right-2 bg-black/50 px-3 py-1 rounded text-xs">
+                            ⬇️ İndir
+                        </button>
+                        <span class="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-xs">
+                            ${index + 1}/${slides.length}
+                        </span>
+                    `;
+                        slidesContainer.appendChild(div);
+                    });
+
+                    // Caption oluştur
+                    const captionPrompt = `"${topic}" için kısa Instagram caption yaz. 2 satır + 5 hashtag. Türkçe.`;
+                    const caption = await callAI(captionPrompt);
+                    document.getElementById('caption').textContent = caption;
+
+                    document.getElementById('status').classList.add('hidden');
+                    document.getElementById('carouselPreview').classList.remove('hidden');
+                    document.getElementById('captionSection').classList.remove('hidden');
+
+                } catch (error) {
+                    alert('Hata: ' + error.message);
+                } finally {
+                    document.getElementById('genBtn').disabled = false;
+                    document.getElementById('genBtn').textContent = '✨ Carousel Oluştur';
+                }
+            }
+
+            function parseSlides(text, count) {
+                const lines = text.split('\n').filter(l => l.trim());
+                const slides = [];
+
+                lines.forEach(line => {
+                    const match = line.match(/SLIDE\s*\d*:?\s*(.+)/i) ||
+                        line.match(/\d+[.):]\s*(.+)/) ||
+                        [null, line.trim()];
+                    if (match && match[1] && slides.length < count) {
+                        slides.push(match[1].trim());
+                    }
+                });
+
+                // Eğer yeterli slide bulunamadıysa varsayılan ekle
+                while (slides.length < count) {
+                    slides.push('💇 Ali Kurt Hair Artist');
+                }
+
+                return slides;
+            }
+
+            function createSlideCanvas(text, num, total, bgColor, textColor, accentColor) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1080;
+                canvas.height = 1080;
+                const ctx = canvas.getContext('2d');
+
+                // Arka plan gradient
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, bgColor);
+                gradient.addColorStop(1, shadeColor(bgColor, -20));
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Dekoratif elementler
+                ctx.fillStyle = accentColor + '20';
+                ctx.beginPath();
+                ctx.arc(100, 100, 200, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(980, 980, 300, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Slide numarası
+                ctx.fillStyle = accentColor;
+                ctx.font = 'bold 48px Arial';
+                ctx.fillText(`${num}/${total}`, 50, 80);
+
+                // Ana metin
+                ctx.fillStyle = textColor;
+                ctx.font = 'bold 64px Arial';
+                ctx.textAlign = 'center';
+
+                // Metni satırlara böl
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+
+                words.forEach(word => {
+                    const testLine = currentLine + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > 900 && currentLine) {
+                        lines.push(currentLine.trim());
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                lines.push(currentLine.trim());
+
+                // Metni ortalayarak yaz
+                const lineHeight = 80;
+                const startY = (canvas.height - lines.length * lineHeight) / 2;
+
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+                });
+
+                // Logo/Marka
+                ctx.font = '32px Arial';
+                ctx.fillStyle = textColor + '80';
+                ctx.fillText('💇 Ali Kurt Hair Artist', canvas.width / 2, canvas.height - 60);
+
+                return canvas;
+            }
+
+            function shadeColor(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return '#' + (0x1000000 +
+                    (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                    (B < 255 ? B < 1 ? 0 : B : 255)
+                ).toString(16).slice(1);
+            }
+
+            function downloadSlide(btn, num) {
+                const img = btn.parentElement.querySelector('img');
+                const link = document.createElement('a');
+                link.download = `carousel_slide_${num}.png`;
+                link.href = img.src;
+                link.click();
+            }
+
+            function downloadAll() {
+                const images = document.querySelectorAll('#slides img');
+                images.forEach((img, i) => {
+                    setTimeout(() => {
+                        const link = document.createElement('a');
+                        link.download = `carousel_slide_${i + 1}.png`;
+                        link.href = img.src;
+                        link.click();
+                    }, i * 500);
+                });
+            }
+
+            function copyCaption() {
+                const caption = document.getElementById('caption').textContent;
+                navigator.clipboard.writeText(caption);
+                alert('✅ Caption kopyalandı!');
+            }
+        </script>
+</body>
+
+</html>

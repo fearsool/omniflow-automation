@@ -1,0 +1,10 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[edge_functions]]
+  path = "/api/hf/*"
+  function = "hf-proxy"

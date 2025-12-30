@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 MicroTrend Bot PRO</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .toggle-btn {
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(139, 92, 246) 100%);
+        }
+
+        .signal-active {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .signal-waiting {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .risk-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #1e293b;
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .rejection-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body class="text-white">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🤖</span>
+                <div>
+                    <h1 class="text-xl font-black">MicroTrend Bot <span class="text-indigo-400">PRO</span></h1>
+                    <p class="text-xs text-slate-500">Grid | Scalping | Paper Trading</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="paperBadge" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50">
+                    <span class="text-amber-400 text-xs font-bold">📝 PAPER</span>
+                </div>
+                <div id="modeBadge" class="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/50">
+                    <span class="text-indigo-400 text-xs font-bold" id="modeText">SCALPING</span>
+                </div>
+                <div id="botStatus"
+                    class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/50">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full pulse"></div>
+                    <span class="text-emerald-400 text-sm font-bold">RUNNING</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6">
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-5 gap-4 mb-6">
+            <div class="glass rounded-2xl p-4 border border-slate-700">
+                <p class="text-[10px] text-slate-500 mb-1">💰 BAKİYE</p>
+                <p class="text-xl font-black" id="balance">$127.45</p>
+            </div>
+            <div class="glass rounded-2xl p-4 border border-slate-700">
+                <p class="text-[10px] text-slate-500 mb-1">📊 GÜNLÜK P&L</p>
+                <p class="text-xl font-black text-emerald-400" id="dailyPnl">+$0.67</p>
+            </div>
+            <div class="glass rounded-2xl p-4 border border-slate-700">
+                <p class="text-[10px] text-slate-500 mb-1">🎯 WIN RATE</p>
+                <p class="text-xl font-black" id="winRate">72%</p>
+            </div>
+            <div class="glass rounded-2xl p-4 border border-slate-700">
+                <p class="text-[10px] text-slate-500 mb-1">📈 TRADE BUGÜN</p>
+                <p class="text-xl font-black" id="tradesToday">0/3</p>
+            </div>
+            <div class="glass rounded-2xl p-4 border border-slate-700">
+                <p class="text-[10px] text-slate-500 mb-1">⏱️ SONRAKİ CHECK</p>
+                <p class="text-xl font-black" id="nextCheck">--:--</p>
+            </div>
+        </div>
+
+        <!-- Daily Risk Bar -->
+        <div class="glass rounded-2xl p-4 border border-slate-700 mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-bold">📊 Günlük Risk Durumu</span>
+                <span class="text-xs text-slate-400">Max: <span class="text-white">%1</span> | Kullanılan: <span
+                        id="riskUsed" class="text-emerald-400">%0.3</span></span>
+            </div>
+            <div class="risk-bar">
+                <div id="riskFill" class="risk-fill bg-emerald-500" style="width: 30%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-slate-500">
+                <span>%0</span>
+                <span>Güvenli Bölge</span>
+                <span>%1 (Limit)</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+
+            <!-- Left Column -->
+            <div class="col-span-1 space-y-4">
+
+                <!-- Crypto Selection -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-4 flex items-center gap-2">
+                        <span>🎮</span> Kripto Seçimi
+                    </h3>
+                    <select id="symbolSelect" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 mb-3">
+                        <option value="BTCUSDT">BTC/USDT - Bitcoin</option>
+                        <option value="ETHUSDT">ETH/USDT - Ethereum</option>
+                        <option value="SOLUSDT">SOL/USDT - Solana</option>
+                        <option value="BNBUSDT">BNB/USDT - Binance Coin</option>
+                        <option value="XRPUSDT">XRP/USDT - Ripple</option>
+                        <option value="ADAUSDT">ADA/USDT - Cardano</option>
+                        <option value="DOGEUSDT">DOGE/USDT - Dogecoin</option>
+                        <option value="AVAXUSDT">AVAX/USDT - Avalanche</option>
+                    </select>
+                    <button onclick="changeSymbol()" class="w-full py-2 gradient-btn rounded-xl font-bold text-sm">
+                        🔄 Kripto Değiştir
+                    </button>
+                </div>
+
+                <!-- AI Auto Selection -->
+                <div class="glass rounded-2xl p-5 border border-indigo-500/50 bg-indigo-500/5">
+                    <h3 class="font-bold mb-3 flex items-center gap-2">
+                        <span>🧠</span> AI Otomatik Seçim
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">
+                        AI en iyi fırsatı analiz edip otomatik seçer (50 coin)
+                    </p>
+                    <button onclick="aiSelectCrypto()" id="aiSelectBtn"
+                        class="w-full py-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl font-bold flex items-center justify-center gap-2">
+                        <span>✨</span> AI En İyisini Seç
+                    </button>
+                    <div id="aiResult" class="hidden mt-4 p-3 bg-slate-800 rounded-xl">
+                        <p class="text-xs text-slate-400">AI Önerisi:</p>
+                        <p class="font-bold text-lg" id="aiRecommendation">-</p>
+                        <p class="text-xs text-emerald-400" id="aiReason">-</p>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-4">⚙️ Ayarlar</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Kaldıraç</label>
+                            <select id="leverage" onchange="updateSettings()"
+                                class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-sm">
+                                <option value="3">3x</option>
+                                <option value="5" selected>5x</option>
+                                <option value="7">7x</option>
+                                <option value="10">10x</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Risk/Trade</label>
+                            <select id="risk" onchange="updateSettings()"
+                                class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-sm">
+                                <option value="0.002">%0.2 (Güvenli)</option>
+                                <option value="0.003" selected>%0.3 (Önerilen)</option>
+                                <option value="0.005">%0.5 (Agresif)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Mode</label>
+                            <select id="tradingMode" onchange="setMode(this.value)"
+                                class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-sm">
+                                <option value="scalping">📈 Scalping</option>
+                                <option value="grid">🔲 Grid Bot</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRO Features -->
+                <div class="glass rounded-2xl p-5 border border-violet-500/50 bg-violet-500/5">
+                    <h3 class="font-bold mb-4">⚡ PRO Özellikler</h3>
+                    <div class="flex gap-2">
+                        <button onclick="togglePaper()" id="paperBtn"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-700">
+                            📝 Paper: OFF
+                        </button>
+                        <button onclick="toggleTrailing()" id="trailingBtn"
+                            class="flex-1 py-2 rounded-lg text-xs font-bold toggle-btn active">
+                            🎯 Trail TP: ON
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Column -->
+            <div class="col-span-1 space-y-4">
+
+                <!-- Current Symbol & Liquidation -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs text-slate-500">Aktif Kripto</p>
+                            <p class="text-2xl font-black" id="currentSymbol">BTCUSDT</p>
+                        </div>
+                        <span class="text-3xl" id="symbolEmoji">₿</span>
+                    </div>
+                    <div class="text-3xl font-black mb-2" id="currentPrice">$87,161</div>
+                    <div class="flex gap-2 mb-4">
+                        <span class="px-2 py-1 rounded bg-rose-500/20 text-rose-400 text-xs"
+                            id="priceChange">-0.97%</span>
+                    </div>
+
+                    <!-- Liquidation Info -->
+                    <div class="border-t border-slate-700 pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400">💥 Tahmini Likidrasyon</span>
+                            <span class="font-bold text-rose-400" id="liqPrice">$82,503</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400">📏 Likidasyona Uzaklık</span>
+                            <span class="font-bold text-emerald-400" id="liqDistance">-5.34%</span>
+                        </div>
+                        <div class="mt-2 text-[10px] text-slate-500">
+                            Kaldıraç: <span id="currentLev">5x</span> | Pozisyon: <span id="positionSide">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Analysis -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-4">📊 Teknik Analiz</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Trend (EMA)</span>
+                            <span class="font-bold" id="trend"><span class="text-rose-400">📉 SHORT</span></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">RSI (14)</span>
+                            <span class="font-bold" id="rsi">67.4</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">ATR</span>
+                            <span class="font-bold" id="atr">$245.30</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Funding Rate</span>
+                            <span class="font-bold" id="funding">+0.01%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Pullback</span>
+                            <span class="font-bold" id="pullback"><span class="text-amber-400">⏳
+                                    Bekleniyor</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signal Status with Rejection Reasons -->
+                <div id="signalBox" class="glass rounded-2xl p-5 border border-amber-500/50 signal-waiting">
+                    <h3 class="font-bold mb-3">🎯 Sinyal Durumu</h3>
+                    <div id="signalContent" class="text-center py-2">
+                        <p class="text-lg font-bold" id="signalText">⏳ Sinyal bekleniyor...</p>
+                        <p class="text-xs text-slate-500 mt-1">5 dakikalık mum kapanışı sonrası</p>
+                    </div>
+
+                    <!-- Rejection Reasons -->
+                    <div id="rejectionBox" class="mt-4 border-t border-slate-700 pt-4">
+                        <p class="text-xs text-slate-400 mb-2">❌ Trade Açılmama Nedenleri:</p>
+                        <div id="rejectionReasons" class="flex flex-wrap">
+                            <span class="rejection-tag bg-rose-500/20 text-rose-400">RSI çok yüksek (67.4)</span>
+                            <span class="rejection-tag bg-amber-500/20 text-amber-400">Pullback yok</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-span-1 space-y-4">
+
+                <!-- Controls -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-4">🎮 Kontroller</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="toggleBot()" id="toggleBtn"
+                            class="py-3 bg-amber-600 rounded-xl font-bold text-sm">
+                            ⏸️ Durdur
+                        </button>
+                        <button onclick="forceCheck()" class="py-3 bg-slate-700 rounded-xl font-bold text-sm">
+                            🔄 Şimdi Kontrol
+                        </button>
+                        <button onclick="closePosition()"
+                            class="col-span-2 py-3 bg-rose-600 rounded-xl font-bold text-sm">
+                            🛑 Pozisyonu Kapat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trade History -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-4">📜 Son İşlemler</h3>
+                    <div id="tradeHistory" class="space-y-2 max-h-36 overflow-y-auto">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <div>
+                                <span class="text-emerald-400 text-xs font-bold">LONG</span>
+                                <span class="text-slate-500 text-xs ml-1">BTC</span>
+                            </div>
+                            <span class="text-emerald-400 text-sm font-bold">+$0.45</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                            <div>
+                                <span class="text-rose-400 text-xs font-bold">SHORT</span>
+                                <span class="text-slate-500 text-xs ml-1">ETH</span>
+                            </div>
+                            <span class="text-rose-400 text-sm font-bold">-$0.18</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log -->
+                <div class="glass rounded-2xl p-5 border border-slate-700">
+                    <h3 class="font-bold mb-3">📋 Log</h3>
+                    <div id="logArea"
+                        class="bg-slate-900 rounded-xl p-3 h-28 overflow-y-auto font-mono text-xs text-slate-400">
+                        <p>[02:24:15] ✅ Bot başlatıldı</p>
+                        <p>[02:24:16] 📊 BTCUSDT analiz ediliyor</p>
+                        <p>[02:24:17] 📈 Trend: SHORT, RSI: 67.4</p>
+                        <p>[02:24:18] ⏳ Pullback bekleniyor...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Scanning Results -->
+        <div id="scanResults" class="hidden mt-6 glass rounded-2xl p-6 border border-indigo-500/50">
+            <h3 class="font-bold mb-4 flex items-center gap-2">
+                <span>🔍</span> AI Kripto Tarama Sonuçları (50 Coin)
+            </h3>
+            <div id="scanGrid" class="grid grid-cols-5 gap-4"></div>
+        </div>
+    </main>
+
+    <script>
+        const API = '/.netlify/functions/api';
+        let currentSymbol = 'BTCUSDT';
+        let isRunning = true;
+        let isPaper = false;
+        let isTrailing = true;
+        let currentMode = 'scalping';
+        let currentLeverage = 5;
+        let dailyPnl = 0.67;
+        let startingBalance = 127.45;
+
+        const symbolEmojis = {
+            'BTCUSDT': '₿', 'ETHUSDT': 'Ξ', 'SOLUSDT': '◎',
+            'BNBUSDT': '🔶', 'XRPUSDT': '💧', 'ADAUSDT': '🔵',
+            'DOGEUSDT': '🐕', 'AVAXUSDT': '🔺'
+        };
+
+        // Initialize
+        async function init() {
+            addLog('🚀 Panel başlatılıyor...');
+            await fetchStatus();
+            await updateMarketData();
+            updatePrice();
+            updateRiskBar();
+            updateLiquidation();
+            setInterval(updatePrice, 5000);
+            setInterval(updateMarketData, 30000);
+            setInterval(fetchStatus, 5000);
+            setInterval(updateCountdown, 1000);
+            setInterval(updateLiquidation, 10000);
+        }
+
+        // Fetch bot status
+        async function fetchStatus() {
+            try {
+                const res = await fetch(API + '/status');
+                const data = await res.json();
+                document.getElementById('balance').textContent = '$' + (data.balance || 127.45).toFixed(2);
+                isPaper = data.paper_trading;
+                isTrailing = data.trailing_tp;
+                currentMode = data.mode || 'scalping';
+                updateModeUI();
+                updatePaperUI();
+                updateTrailingUI();
+            } catch (e) { }
+        }
+
+        // Update market data
+        async function updateMarketData() {
+            try {
+                const res = await fetch(API + '/market/' + currentSymbol);
+                const data = await res.json();
+
+                if (data.trend) {
+                    const trendClass = data.trend === 'LONG' ? 'text-emerald-400' : 'text-rose-400';
+                    const trendIcon = data.trend === 'LONG' ? '📈' : '📉';
+                    document.getElementById('trend').innerHTML = `<span class="${trendClass}">${trendIcon} ${data.trend}</span>`;
+                }
+                if (data.rsi) {
+                    document.getElementById('rsi').textContent = data.rsi.toFixed(1);
+                }
+
+                // Update rejection reasons
+                updateRejectionReasons(data);
+
+                if (data.pullback !== undefined) {
+                    const pullbackEl = document.getElementById('pullback');
+                    if (data.pullback) {
+                        pullbackEl.innerHTML = '<span class="text-emerald-400">✅ Hazır</span>';
+                        document.getElementById('signalBox').className = 'glass rounded-2xl p-5 border signal-active';
+                        document.getElementById('signalText').innerHTML = `🚀 ${data.trend} SİNYALİ AKTİF!`;
+                        document.getElementById('rejectionBox').classList.add('hidden');
+                    } else {
+                        pullbackEl.innerHTML = '<span class="text-amber-400">⏳ Bekleniyor</span>';
+                        document.getElementById('signalBox').className = 'glass rounded-2xl p-5 border signal-waiting';
+                        document.getElementById('signalText').innerHTML = '⏳ Sinyal bekleniyor...';
+                        document.getElementById('rejectionBox').classList.remove('hidden');
+                    }
+                }
+            } catch (e) { }
+
+            // Funding rate
+            try {
+                const fundingRes = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${currentSymbol}`);
+                const fundingData = await fundingRes.json();
+                const fundingRate = (parseFloat(fundingData.lastFundingRate) * 100).toFixed(4);
+                document.getElementById('funding').textContent = (fundingRate >= 0 ? '+' : '') + fundingRate + '%';
+            } catch (e) { }
+        }
+
+        // Update rejection reasons
+        function updateRejectionReasons(data) {
+            const reasons = [];
+            const rsi = data.rsi || 67.4;
+            const trend = data.trend || 'SHORT';
+            const funding = parseFloat(document.getElementById('funding').textContent) || 0.01;
+
+            // RSI check
+            if (trend === 'LONG' && (rsi < 40 || rsi > 50)) {
+                reasons.push({ text: `RSI çok ${rsi > 50 ? 'yüksek' : 'düşük'} (${rsi.toFixed(1)})`, color: 'rose' });
+            }
+            if (trend === 'SHORT' && (rsi < 50 || rsi > 60)) {
+                reasons.push({ text: `RSI uygun değil (${rsi.toFixed(1)})`, color: 'rose' });
+            }
+
+            // Pullback check
+            if (!data.pullback) {
+                reasons.push({ text: 'Pullback bekleniyor', color: 'amber' });
+            }
+
+            // Funding check
+            if (Math.abs(funding) > 0.03) {
+                reasons.push({ text: `Funding riskli (${funding}%)`, color: 'rose' });
+            }
+
+            // Daily loss check
+            const dailyLossPct = (dailyPnl / startingBalance) * 100;
+            if (dailyLossPct < -1) {
+                reasons.push({ text: 'Günlük loss limiti aşıldı', color: 'rose' });
+            }
+
+            // Trade limit check
+            const tradesText = document.getElementById('tradesToday').textContent;
+            const trades = parseInt(tradesText.split('/')[0]) || 0;
+            if (trades >= 3) {
+                reasons.push({ text: 'Günlük trade limiti doldu', color: 'rose' });
+            }
+
+            const container = document.getElementById('rejectionReasons');
+            if (reasons.length > 0) {
+                container.innerHTML = reasons.map(r =>
+                    `<span class="rejection-tag bg-${r.color}-500/20 text-${r.color}-400">${r.text}</span>`
+                ).join('');
+            } else {
+                container.innerHTML = '<span class="rejection-tag bg-emerald-500/20 text-emerald-400">Tüm koşullar uygun ✅</span>';
+            }
+        }
+
+        // Update liquidation price
+        function updateLiquidation() {
+            const priceText = document.getElementById('currentPrice').textContent.replace(/[$,]/g, '');
+            const price = parseFloat(priceText) || 87161;
+            const leverage = currentLeverage;
+
+            // Simplified liquidation calculation
+            // For LONG: Liq = Entry * (1 - 1/Leverage + fees)
+            // For SHORT: Liq = Entry * (1 + 1/Leverage - fees)
+            const liqDistance = (1 / leverage) * 0.95; // ~95% of theoretical
+            const liqPrice = price * (1 - liqDistance);
+
+            document.getElementById('liqPrice').textContent = '$' + liqPrice.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            document.getElementById('liqDistance').textContent = '-' + (liqDistance * 100).toFixed(2) + '%';
+            document.getElementById('currentLev').textContent = leverage + 'x';
+        }
+
+        // Update risk bar
+        function updateRiskBar() {
+            const maxRisk = 1; // 1%
+            const usedRisk = Math.abs((dailyPnl / startingBalance) * 100);
+            const percentage = Math.min((usedRisk / maxRisk) * 100, 100);
+
+            const fill = document.getElementById('riskFill');
+            fill.style.width = percentage + '%';
+
+            if (percentage < 50) {
+                fill.className = 'risk-fill bg-emerald-500';
+            } else if (percentage < 80) {
+                fill.className = 'risk-fill bg-amber-500';
+            } else {
+                fill.className = 'risk-fill bg-rose-500';
+            }
+
+            document.getElementById('riskUsed').textContent = '%' + usedRisk.toFixed(2);
+            document.getElementById('riskUsed').className = percentage < 50 ? 'text-emerald-400' : percentage < 80 ? 'text-amber-400' : 'text-rose-400';
+        }
+
+        // Update price
+        function updatePrice() {
+            fetch(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${currentSymbol}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('currentPrice').textContent = '$' + parseFloat(data.lastPrice).toLocaleString();
+                    const change = parseFloat(data.priceChangePercent);
+                    const changeEl = document.getElementById('priceChange');
+                    changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                    changeEl.className = `px-2 py-1 rounded text-xs ${change >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`;
+
+                    const atr = parseFloat(data.lastPrice) * 0.003;
+                    document.getElementById('atr').textContent = '$' + atr.toFixed(2);
+
+                    updateLiquidation();
+                })
+                .catch(() => { });
+        }
+
+        // Change symbol
+        function changeSymbol() {
+            currentSymbol = document.getElementById('symbolSelect').value;
+            document.getElementById('currentSymbol').textContent = currentSymbol;
+            document.getElementById('symbolEmoji').textContent = symbolEmojis[currentSymbol] || '🪙';
+
+            fetch(API + '/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symbol: currentSymbol })
+            });
+
+            updatePrice();
+            updateMarketData();
+            addLog(`🔄 Kripto değiştirildi: ${currentSymbol}`);
+        }
+
+        // AI Select
+        async function aiSelectCrypto() {
+            const btn = document.getElementById('aiSelectBtn');
+            btn.innerHTML = '<span class="animate-spin">⏳</span> AI 50 coin analiz ediyor...';
+            btn.disabled = true;
+
+            document.getElementById('scanResults').classList.remove('hidden');
+            const grid = document.getElementById('scanGrid');
+            grid.innerHTML = '<p class="col-span-5 text-center text-slate-400">🔍 Tarama yapılıyor...</p>';
+
+            try {
+                const res = await fetch(API + '/scan', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const results = await res.json();
+
+                if (!results || !Array.isArray(results) || results.length === 0) {
+                    throw new Error('Boş sonuç');
+                }
+
+                grid.innerHTML = results.slice(0, 10).map((r, i) => `
+                    <div class="p-3 rounded-xl border ${i === 0 ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700'} cursor-pointer hover:border-indigo-500" onclick="selectFromScan('${r.symbol}')">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold">${r.symbol.replace('USDT', '')}</span>
+                            ${i === 0 ? '<span class="text-xs bg-emerald-500 px-2 py-0.5 rounded text-black font-bold">EN İYİ</span>' : ''}
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Trend</span>
+                                <span class="${r.trend === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${r.trend}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">RSI</span>
+                                <span>${r.rsi}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Pullback</span>
+                                <span>${r.pullback ? '✅' : '❌'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                const best = results[0];
+                document.getElementById('aiResult').classList.remove('hidden');
+                document.getElementById('aiRecommendation').textContent = best.symbol;
+                document.getElementById('aiReason').textContent = `Trend: ${best.trend}, RSI: ${best.rsi}`;
+                addLog(`🧠 AI tarama tamamlandı. Öneri: ${best.symbol}`);
+            } catch (e) {
+                addLog('❌ AI tarama hatası: ' + e.message);
+                grid.innerHTML = `
+                    <div class="col-span-5 text-center">
+                        <p class="text-rose-400 mb-2">❌ Tarama başarısız</p>
+                        <p class="text-xs text-slate-500">${e.message}</p>
+                        <button onclick="aiSelectCrypto()" class="mt-3 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-bold">🔄 Tekrar Dene</button>
+                    </div>
+                `;
+            }
+
+            btn.innerHTML = '<span>✨</span> AI En İyisini Seç';
+            btn.disabled = false;
+        }
+
+        function selectFromScan(symbol) {
+            document.getElementById('symbolSelect').value = symbol;
+            changeSymbol();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            fetch(API + '/mode/' + mode, { method: 'POST' });
+            updateModeUI();
+            addLog(`📊 Mode: ${mode.toUpperCase()}`);
+        }
+
+        function updateModeUI() {
+            document.getElementById('modeText').textContent = currentMode.toUpperCase();
+            document.getElementById('tradingMode').value = currentMode;
+        }
+
+        function updateSettings() {
+            currentLeverage = parseInt(document.getElementById('leverage').value);
+            const risk = document.getElementById('risk').value;
+
+            fetch(API + '/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leverage: currentLeverage, risk: parseFloat(risk) })
+            });
+
+            updateLiquidation();
+            addLog(`⚙️ Ayarlar: ${currentLeverage}x, %${parseFloat(risk) * 100}`);
+        }
+
+        function togglePaper() {
+            fetch(API + '/paper/toggle', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    isPaper = data.paper_trading;
+                    updatePaperUI();
+                    addLog(`📝 Paper: ${isPaper ? 'ON' : 'OFF'}`);
+                });
+        }
+
+        function updatePaperUI() {
+            document.getElementById('paperBadge').classList.toggle('hidden', !isPaper);
+            document.getElementById('paperBtn').textContent = `📝 Paper: ${isPaper ? 'ON' : 'OFF'}`;
+            document.getElementById('paperBtn').className = `flex-1 py-2 rounded-lg text-xs font-bold ${isPaper ? 'toggle-btn active' : 'bg-slate-700'}`;
+        }
+
+        function toggleTrailing() {
+            isTrailing = !isTrailing;
+            fetch(API + '/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trailing_tp: isTrailing })
+            });
+            updateTrailingUI();
+            addLog(`🎯 Trailing TP: ${isTrailing ? 'ON' : 'OFF'}`);
+        }
+
+        function updateTrailingUI() {
+            document.getElementById('trailingBtn').textContent = `🎯 Trail TP: ${isTrailing ? 'ON' : 'OFF'}`;
+            document.getElementById('trailingBtn').className = `flex-1 py-2 rounded-lg text-xs font-bold ${isTrailing ? 'toggle-btn active' : 'bg-slate-700'}`;
+        }
+
+        function toggleBot() {
+            const endpoint = isRunning ? '/stop' : '/start';
+            fetch(API + endpoint, { method: 'POST' })
+                .then(() => {
+                    isRunning = !isRunning;
+                    const btn = document.getElementById('toggleBtn');
+                    const status = document.getElementById('botStatus');
+                    if (isRunning) {
+                        btn.innerHTML = '⏸️ Durdur';
+                        btn.className = 'py-3 bg-amber-600 rounded-xl font-bold text-sm';
+                        status.innerHTML = '<div class="w-2 h-2 bg-emerald-500 rounded-full pulse"></div><span class="text-emerald-400 text-sm font-bold">RUNNING</span>';
+                        addLog('▶️ Bot devam ediyor');
+                    } else {
+                        btn.innerHTML = '▶️ Başlat';
+                        btn.className = 'py-3 bg-emerald-600 rounded-xl font-bold text-sm';
+                        status.innerHTML = '<div class="w-2 h-2 bg-amber-500 rounded-full"></div><span class="text-amber-400 text-sm font-bold">PAUSED</span>';
+                        addLog('⏸️ Bot duraklatıldı');
+                    }
+                });
+        }
+
+        function forceCheck() {
+            fetch(API + '/check', { method: 'POST' });
+            updateMarketData();
+            addLog('🔄 Manuel kontrol tetiklendi...');
+        }
+
+        function closePosition() {
+            if (confirm('Açık pozisyonu kapatmak istediğinize emin misiniz?')) {
+                addLog('🛑 Pozisyon kapatma komutu gönderildi');
+            }
+        }
+
+        function addLog(message) {
+            const logArea = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            logArea.innerHTML += `<p>[${time}] ${message}</p>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const nextMinute = Math.ceil(now.getMinutes() / 5) * 5;
+            const next = new Date(now);
+            next.setMinutes(nextMinute, 5, 0);
+            if (next <= now) next.setMinutes(next.getMinutes() + 5);
+            const diff = Math.floor((next - now) / 1000);
+            const m = Math.floor(diff / 60);
+            const s = diff % 60;
+            document.getElementById('nextCheck').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

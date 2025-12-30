@@ -1,0 +1,54 @@
+# .github/workflows/omniflow-runner.yml
+# OmniFlow Otomatik Çalıştırıcı
+
+name: 🤖 OmniFlow Automation Runner
+
+on:
+  # Zamanlı çalıştırma
+  schedule:
+    - cron: '0 */6 * * *'  # Her 6 saatte bir (00:00, 06:00, 12:00, 18:00 UTC)
+    # Türkiye için: UTC+3, yani 03:00, 09:00, 15:00, 21:00
+    
+  # Manuel tetikleme
+  workflow_dispatch:
+    inputs:
+      blueprint_id:
+        description: 'Belirli bir blueprint ID (boş bırakırsan hepsini çalıştırır)'
+        required: false
+        default: ''
+
+jobs:
+  run-automations:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Install Dependencies
+        run: |
+          pip install requests
+      
+      - name: 🚀 Run Automations
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python runner.py
+      
+      - name: 📊 Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: automation-logs-${{ github.run_number }}
+          path: |
+            *.log
+          retention-days: 7

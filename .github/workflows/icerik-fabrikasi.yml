@@ -1,0 +1,42 @@
+name: "📱 İçerik Fabrikası - Content Factory"
+
+on:
+  schedule:
+    # Her gün 09:00 ve 18:00 Türkiye saati (UTC+3)
+    - cron: '0 6 * * *'   # 09:00 TR
+    - cron: '0 15 * * *'  # 18:00 TR
+  workflow_dispatch:  # Manuel tetikleme
+
+env:
+  HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+jobs:
+  run-content-factory:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Install dependencies
+        run: |
+          pip install requests
+      
+      - name: 🚀 Run İçerik Fabrikası
+        run: |
+          cd automations
+          python icerik_fabrikasi.py "Güncel trendleri tara ve sosyal medya içerik paketi oluştur"
+      
+      - name: 📤 Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-factory-results-${{ github.run_number }}
+          path: automations/icerik_fabrikasi_*.json
+          retention-days: 30

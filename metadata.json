@@ -1,0 +1,9 @@
+
+{
+  "name": "OmniFlow - Profit Factory OS",
+  "description": "Universal autonomous system generator for crypto, social media, assistants and business automation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

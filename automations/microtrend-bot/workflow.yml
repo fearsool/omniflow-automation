@@ -1,0 +1,85 @@
+name: MicroTrend Bot
+
+on:
+  schedule:
+    # Her 5 dakikada bir çalıştır
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode'
+        required: true
+        default: 'run'
+        type: choice
+        options:
+          - run
+          - check
+          - stop
+
+env:
+  BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+  BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+  BINANCE_TESTNET: ${{ secrets.BINANCE_TESTNET || 'true' }}
+  TRADING_SYMBOL: ${{ secrets.TRADING_SYMBOL || 'BTCUSDT' }}
+  LEVERAGE: ${{ secrets.LEVERAGE || '5' }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r automations/microtrend-bot/requirements.txt
+      
+      - name: Run single cycle
+        if: ${{ github.event.inputs.mode != 'stop' }}
+        run: |
+          cd automations/microtrend-bot
+          python -c "
+from bot import run_strategy, state, get_account_balance, set_leverage, CONFIG
+
+# Initialize
+balance = get_account_balance()
+if balance <= 0:
+    print('❌ Bakiye alınamadı')
+    exit(1)
+
+state.starting_balance = balance
+set_leverage()
+
+print(f'💳 Bakiye: \${balance:.2f}')
+print(f'⚙️ Symbol: {CONFIG[\"SYMBOL\"]}')
+print(f'⚙️ Leverage: {CONFIG[\"LEVERAGE\"]}x')
+
+# Run once
+run_strategy()
+print('✅ Döngü tamamlandı')
+"
+      
+      - name: Check status only
+        if: ${{ github.event.inputs.mode == 'check' }}
+        run: |
+          cd automations/microtrend-bot
+          python -c "
+from bot import get_account_balance, get_position, get_mark_price, CONFIG
+
+balance = get_account_balance()
+price = get_mark_price()
+position = get_position()
+
+print(f'💳 Bakiye: \${balance:.2f}')
+print(f'💰 Fiyat: \${price:,.2f}')
+print(f'📊 Pozisyon: {position if position else \"Yok\"}')
+"
