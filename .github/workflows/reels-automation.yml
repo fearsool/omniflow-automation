@@ -1,0 +1,47 @@
+name: Reels Auto Creator (Hairdresser)
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Video Topic'
+        required: false
+        default: 'Trending Hairdresser Transformations'
+  schedule:
+    - cron: '0 9 * * *'  # Her gün 09:00 UTC (12:00 TR)
+
+permissions:
+  contents: read
+
+jobs:
+  create-reels:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f automations/reels-creator/requirements.txt ]; then pip install -r automations/reels-creator/requirements.txt; fi
+
+    - name: Run Reels Bot
+      env:
+        HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        python automations/reels-creator/reels_bot.py "${{ github.event.inputs.topic || 'Daily Hairdresser Trends' }}"
+
+    - name: Upload Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: reels-results
+        path: results_*.json
+        if-no-files-found: ignore
