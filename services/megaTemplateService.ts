@@ -4285,8 +4285,8 @@ const FINANCE_TEMPLATES: MegaTemplate[] = [
     },
     // 📈 STOCK & FOREX ($80K-1M/ay)
     {
-        id: 'stock-options-scanner',
-        name: '📈 Stock Options Scanner (Opsiyon Tarayıcı)',
+        id: 'stock-options-scanner-pro',
+        name: '📈 Stock Options Scanner PRO (Opsiyon Tarayıcı)',
         description: 'Wall Street balinalarının opsiyon hareketlerini ve unusual volume\'u yakala',
         category: 'finance',
         subcategory: 'stock',
@@ -4314,8 +4314,8 @@ const FINANCE_TEMPLATES: MegaTemplate[] = [
         }
     },
     {
-        id: 'forex-news-trader',
-        name: '💹 Forex News Trader (Haber Botu)',
+        id: 'forex-news-trader-pro',
+        name: '💹 Forex News Trader PRO (Haber Botu)',
         description: 'Ekonomik takvimi takip et, faiz kararlarında saniyeler içinde işlem sinyali üret',
         category: 'finance',
         subcategory: 'forex',

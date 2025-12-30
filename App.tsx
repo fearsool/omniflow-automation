@@ -22,7 +22,9 @@ const App: React.FC = () => {
   // --- STATES ---
   const [blueprints, setBlueprints] = useState<SystemBlueprint[]>([]);
   const [opportunities, setOpportunities] = useState<MarketOpportunity[]>([]);
-  const [activeView, setActiveView] = useState<'factory' | 'insights' | 'studio' | 'vault' | 'sandbox' | 'deploy' | 'monitor'>('factory');
+  const [activeView, setActiveView] = useState<'discover' | 'design' | 'studio' | 'test' | 'package' | 'publish' | 'analytics' | 'monitor' | 'vault' | 'settings'>('discover');
+  const [workflowStep, setWorkflowStep] = useState(1); // 1-5 adım takibi
+  const [showSettings, setShowSettings] = useState(false);
 
   // Modal states for new features
   const [showIntegrationHub, setShowIntegrationHub] = useState(false);
@@ -380,30 +382,136 @@ const App: React.FC = () => {
           onClose={() => setShowCarousel(false)}
         />
       )}
-      <nav className="w-20 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-6 gap-4 z-50 overflow-y-auto">
-        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-600/20" onClick={() => setActiveView('factory')}><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
-        <NavItem active={activeView === 'insights'} icon="💎" onClick={() => setActiveView('insights')} title="RADAR" />
-        <NavItem active={activeView === 'factory'} icon="🏗️" onClick={() => setActiveView('factory')} title="MİMAR" />
-        <NavItem active={activeView === 'studio'} icon="⚙️" onClick={() => setActiveView('studio')} title="STÜDYO" />
-        <NavItem active={activeView === 'sandbox'} icon="🧪" onClick={() => setActiveView('sandbox')} title="TEST" />
-        <NavItem active={activeView === 'deploy'} icon="🚀" onClick={() => setActiveView('deploy')} title="DEPLOY" />
-        <NavItem active={activeView === 'monitor'} icon="🩺" onClick={() => setActiveView('monitor')} title="MONİTÖR" />
-        <NavItem active={showResults} icon="📊" onClick={() => setShowResults(true)} title="SONUÇLAR" />
-        <NavItem active={showHistory} icon="📜" onClick={() => setShowHistory(true)} title="GEÇMİŞ" />
-        <NavItem active={false} icon="☁️" onClick={() => setShowCloudSettings(true)} title="CLOUD" />
-        <NavItem active={showCarousel} icon="🎨" onClick={() => setShowCarousel(true)} title="CAROUSEL" />
-        <NavItem active={false} icon="🧹" onClick={clearWorkspace} title="TEMİZLE" />
-        <NavItem active={activeView === 'vault'} icon="📂" onClick={() => setActiveView('vault')} title="KASA" />
+      <nav className="w-24 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-4 gap-2 z-50 overflow-y-auto">
+        {/* Logo */}
+        <div className="w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-600/30 mb-2" onClick={() => setActiveView('discover')}>
+          <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="w-16 mb-4">
+          <div className="text-[8px] text-slate-500 text-center mb-1 font-bold">ADIM {workflowStep}/5</div>
+          <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-500" style={{ width: `${workflowStep * 20}%` }} />
+          </div>
+        </div>
+
+        {/* Separator */}
+        <div className="w-12 border-t border-slate-800 mb-2" />
+        <div className="text-[7px] text-slate-600 font-bold tracking-widest mb-1">AKIŞ</div>
+
+        {/* === WORKFLOW STEPS === */}
+        <NavItem
+          active={activeView === 'discover'}
+          icon="💡"
+          onClick={() => { setActiveView('discover'); setWorkflowStep(1); }}
+          title="KEŞİF"
+          tooltip="Hazır şablondan seç veya fikir yaz"
+          step={1}
+          completed={workflowStep > 1}
+        />
+        <NavItem
+          active={activeView === 'design' || activeView === 'studio'}
+          icon="🏗️"
+          onClick={() => { setActiveView('design'); if (workflowStep < 2) setWorkflowStep(2); }}
+          title="TASARIM"
+          tooltip="Otomasyonun adımlarını kur"
+          step={2}
+          completed={workflowStep > 2}
+          disabled={workflowStep < 1}
+        />
+        <NavItem
+          active={activeView === 'test'}
+          icon="🧪"
+          onClick={() => { setActiveView('test'); if (workflowStep < 3) setWorkflowStep(3); }}
+          title="TEST"
+          tooltip="Sistemi sanal ortamda dene"
+          step={3}
+          completed={workflowStep > 3}
+          disabled={workflowStep < 2}
+        />
+        <NavItem
+          active={activeView === 'package'}
+          icon="📦"
+          onClick={() => { setActiveView('package'); if (workflowStep < 4) setWorkflowStep(4); }}
+          title="PAKET"
+          tooltip="Kodu oluştur, API key'leri gir"
+          step={4}
+          completed={workflowStep > 4}
+          disabled={workflowStep < 3}
+        />
+        <NavItem
+          active={activeView === 'publish'}
+          icon="🚀"
+          onClick={() => { setActiveView('publish'); if (workflowStep < 5) setWorkflowStep(5); }}
+          title="CANLI"
+          tooltip="Tek tıkla yayına al!"
+          step={5}
+          completed={workflowStep > 5}
+          disabled={workflowStep < 4}
+        />
+
+        {/* Separator */}
+        <div className="w-12 border-t border-slate-800 my-2" />
+        <div className="text-[7px] text-slate-600 font-bold tracking-widest mb-1">ARAÇLAR</div>
+
+        {/* === TOOLS === */}
+        <NavItem
+          active={false}
+          icon="🎯"
+          onClick={() => setShowTemplates(true)}
+          title="ŞABLON"
+          tooltip="190+ hazır otomasyon şablonu"
+        />
+        <NavItem
+          active={activeView === 'vault'}
+          icon="📂"
+          onClick={() => setActiveView('vault')}
+          title="KASA"
+          tooltip="Kayıtlı tüm otomasyonların"
+        />
+        <NavItem
+          active={activeView === 'analytics'}
+          icon="📊"
+          onClick={() => setActiveView('analytics')}
+          title="RAPOR"
+          tooltip="Çalışma geçmişi ve performans"
+        />
+        <NavItem
+          active={activeView === 'monitor'}
+          icon="🩺"
+          onClick={() => setActiveView('monitor')}
+          title="MONİTÖR"
+          tooltip="Canlı sistem izleme"
+        />
+
+        {/* Separator & Settings */}
+        <div className="flex-1" />
+        <div className="w-12 border-t border-slate-800 my-2" />
+        <NavItem
+          active={showSettings}
+          icon="⚙️"
+          onClick={() => setShowCloudSettings(true)}
+          title="AYAR"
+          tooltip="Cloud ve API ayarları"
+        />
+        <NavItem
+          active={false}
+          icon="🧹"
+          onClick={clearWorkspace}
+          title="TEMİZLE"
+          tooltip="Çalışma alanını sıfırla"
+        />
       </nav>
 
       {/* LEFT PANEL */}
       <aside className="w-[420px] bg-[#0a0f1e] border-r border-slate-800 flex flex-col shadow-2xl relative overflow-hidden">
-        {activeView === 'sandbox' && (
+        {activeView === 'test' && (
           <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 animate-pulse z-10"></div>
         )}
 
         <div className="p-8 flex-1 overflow-y-auto custom-scrollbar space-y-10">
-          {activeView === 'sandbox' && selectedBlueprint && (
+          {activeView === 'test' && selectedBlueprint && (
             <div className="animate-in fade-in slide-in-from-left-4">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black uppercase tracking-tighter">TEST LAB</h2>
@@ -444,9 +552,9 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {activeView === 'factory' && (
+          {activeView === 'discover' && (
             <div className="animate-in fade-in slide-in-from-left-4">
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-8">FABRİKA MİMARI</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-8">💡 KEŞİF</h2>
               {!showDiscovery ? (
                 <div className="space-y-6">
                   {/* Template Marketplace Button */}
@@ -459,7 +567,7 @@ const App: React.FC = () => {
                         <span className="text-2xl group-hover:scale-110 transition-transform">🎯</span>
                         <div className="text-left">
                           <p className="text-sm font-bold text-white">Template Marketplace</p>
-                          <p className="text-[10px] text-slate-400">6 hazır otomasyon şablonu</p>
+                          <p className="text-[10px] text-slate-400">190+ hazır otomasyon şablonu</p>
                         </div>
                       </div>
                       <span className="text-indigo-400 text-xs">KEŞFET →</span>
@@ -508,8 +616,89 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* RADAR/INSIGHTS VIEW */}
-          {activeView === 'insights' && (
+          {/* DESIGN VIEW - Tasarım */}
+          {activeView === 'design' && (
+            <div className="animate-in fade-in slide-in-from-left-4">
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">🏗️ TASARIM</h2>
+              <p className="text-sm text-slate-500 mb-8">Otomasyonun adımlarını ve akışını düzenle</p>
+
+              {selectedBlueprint ? (
+                <div className="space-y-6">
+                  <div className="bg-[#020617] p-5 rounded-3xl border border-indigo-500/30">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">AKTİF PROJE</span>
+                        <h3 className="text-lg font-bold text-white mt-1">{selectedBlueprint.name}</h3>
+                        <p className="text-[10px] text-slate-500 mt-1">{selectedBlueprint.nodes?.length || 0} node tanımlı</p>
+                      </div>
+                      <span className="text-[9px] bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded font-bold">DÜZENLEME MODU</span>
+                    </div>
+                  </div>
+                  <div className="bg-[#020617] p-5 rounded-3xl border border-slate-800">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">WORKFLOW ADIMLARI</h4>
+                    <div className="space-y-3">
+                      {selectedBlueprint.nodes?.map((node, idx) => (
+                        <div key={node.id} className="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-700">
+                          <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-white">{node.title}</p>
+                            <p className="text-[9px] text-slate-500 truncate">{node.task}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={() => { setActiveView('test'); setWorkflowStep(3); }} className="w-full p-4 bg-indigo-600 rounded-xl text-center font-bold text-white hover:bg-indigo-700">
+                    ✅ Tasarımı Onayla → TEST
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-20 opacity-50">
+                  <span className="text-6xl mb-4 block">🏗️</span>
+                  <p className="text-sm text-slate-500">Önce KEŞİF'ten bir şablon seç</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PACKAGE VIEW - Paket Hazırlama */}
+          {activeView === 'package' && (
+            <div className="animate-in fade-in slide-in-from-left-4">
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">📦 PAKET</h2>
+              <p className="text-sm text-slate-500 mb-8">Kodu oluştur ve API anahtarlarını ayarla</p>
+
+              {selectedBlueprint ? (
+                <div className="space-y-6">
+                  <div className="bg-[#020617] p-5 rounded-3xl border border-emerald-500/30">
+                    <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4">HAZIRLIK KONTROL</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3"><span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">✓</span><span className="text-sm text-white">Tasarım tamamlandı</span></div>
+                      <div className="flex items-center gap-3"><span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center">✓</span><span className="text-sm text-white">Test başarılı</span></div>
+                    </div>
+                  </div>
+                  <div className="bg-[#020617] p-5 rounded-3xl border border-slate-800">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">ÇALIŞMA ZAMANI</h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button className="p-3 bg-indigo-600/20 border border-indigo-500 rounded-xl text-center"><span className="text-lg block">🌅</span><span className="text-[10px] text-indigo-400 font-bold">Her Sabah</span></button>
+                      <button className="p-3 bg-slate-900 border border-slate-700 rounded-xl hover:border-slate-500"><span className="text-lg block">🌙</span><span className="text-[10px] text-slate-400">Her Akşam</span></button>
+                      <button className="p-3 bg-slate-900 border border-slate-700 rounded-xl hover:border-slate-500"><span className="text-lg block">⚡</span><span className="text-[10px] text-slate-400">Manuel</span></button>
+                    </div>
+                  </div>
+                  <button onClick={() => { setActiveView('publish'); setWorkflowStep(5); }} className="w-full p-4 bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-xl text-center font-bold text-white shadow-lg">
+                    ✅ Paket Hazır → YAYINLA
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-20 opacity-50">
+                  <span className="text-6xl mb-4 block">📦</span>
+                  <p className="text-sm text-slate-500">Önce bir otomasyon tasarla ve test et</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* RADAR/ANALYTICS VIEW */}
+          {activeView === 'analytics' && (
             <div className="animate-in fade-in slide-in-from-left-4">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-black uppercase tracking-tighter">💎 RADAR</h2>
@@ -579,76 +768,84 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* DEPLOY VIEW */}
-          {activeView === 'deploy' && (
+          {/* PUBLISH VIEW - Yayına Alma Merkezi */}
+          {activeView === 'publish' && (
             <div className="animate-in fade-in slide-in-from-left-4">
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-8">🚀 DEPLOY MERKEZİ</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">🚀 YAYINA AL</h2>
+              <p className="text-sm text-slate-500 mb-8">Otomasyonunu canlıya almak için son adımlar</p>
 
               {selectedBlueprint ? (
                 <div className="space-y-6">
+                  {/* Progress Steps */}
+                  <div className="flex items-center justify-between bg-[#020617] p-4 rounded-2xl border border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">✓</div>
+                      <span className="text-xs text-emerald-400">Test OK</span>
+                    </div>
+                    <div className="flex-1 h-px bg-slate-700 mx-3" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">✓</div>
+                      <span className="text-xs text-emerald-400">Paket Hazır</span>
+                    </div>
+                    <div className="flex-1 h-px bg-slate-700 mx-3" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-500 text-white text-xs font-bold flex items-center justify-center animate-pulse">3</div>
+                      <span className="text-xs text-indigo-400 font-bold">Yayınla</span>
+                    </div>
+                  </div>
+
                   {/* Selected System Info */}
                   <div className="bg-[#020617] p-5 rounded-3xl border border-indigo-500/30">
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">SEÇİLİ SİSTEM</span>
+                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">YAYINLANACAK SİSTEM</span>
                     <h3 className="text-lg font-bold text-white mt-2">{selectedBlueprint.name}</h3>
                     <p className="text-[10px] text-slate-500 mt-1">{selectedBlueprint.nodes?.length || 0} workflow düğümü</p>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => setShowIntegrationHub(true)}
-                      className="w-full p-5 bg-[#020617] border border-slate-800 rounded-2xl hover:border-indigo-500 transition-all text-left group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">🔌</span>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-white group-hover:text-indigo-400">Entegrasyon Merkezi</h4>
-                          <p className="text-[9px] text-slate-500">WhatsApp, Telegram, Discord, Webhook bağlantıları</p>
-                        </div>
-                        <span className="text-slate-600 group-hover:text-indigo-400">→</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setShowCodeExport(true)}
-                      className="w-full p-5 bg-[#020617] border border-slate-800 rounded-2xl hover:border-emerald-500 transition-all text-left group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">📦</span>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-white group-hover:text-emerald-400">Kod Export</h4>
-                          <p className="text-[9px] text-slate-500">Python, Node.js, GitHub Action, Docker</p>
-                        </div>
-                        <span className="text-slate-600 group-hover:text-emerald-400">→</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setShowDeployPanel(true)}
-                      className="w-full p-5 bg-[#020617] border border-slate-800 rounded-2xl hover:border-amber-500 transition-all text-left group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">☁️</span>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold text-white group-hover:text-amber-400">Canlıya Al</h4>
-                          <p className="text-[9px] text-slate-500">Railway, Render, Vercel, Netlify deploy</p>
-                        </div>
-                        <span className="text-slate-600 group-hover:text-amber-400">→</span>
-                      </div>
-                    </button>
+                  {/* Platform Selection */}
+                  <div className="bg-[#020617] p-5 rounded-3xl border border-slate-800">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">HEDEF PLATFORM SEÇ</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => setShowCodeExport(true)} className="p-4 bg-slate-900 border border-slate-700 rounded-xl hover:border-indigo-500 transition-all text-center group">
+                        <span className="text-2xl block mb-2">📦</span>
+                        <span className="text-xs font-bold text-white group-hover:text-indigo-400">GitHub Actions</span>
+                        <span className="text-[9px] text-slate-500 block">Otomatik çalışır</span>
+                      </button>
+                      <button onClick={() => setShowDeployPanel(true)} className="p-4 bg-slate-900 border border-slate-700 rounded-xl hover:border-emerald-500 transition-all text-center group">
+                        <span className="text-2xl block mb-2">🚂</span>
+                        <span className="text-xs font-bold text-white group-hover:text-emerald-400">Railway</span>
+                        <span className="text-[9px] text-slate-500 block">Cloud hosting</span>
+                      </button>
+                      <button onClick={() => setShowDeployPanel(true)} className="p-4 bg-slate-900 border border-slate-700 rounded-xl hover:border-amber-500 transition-all text-center group">
+                        <span className="text-2xl block mb-2">▲</span>
+                        <span className="text-xs font-bold text-white group-hover:text-amber-400">Vercel</span>
+                        <span className="text-[9px] text-slate-500 block">Serverless</span>
+                      </button>
+                      <button onClick={() => setShowIntegrationHub(true)} className="p-4 bg-slate-900 border border-slate-700 rounded-xl hover:border-purple-500 transition-all text-center group">
+                        <span className="text-2xl block mb-2">⬇️</span>
+                        <span className="text-xs font-bold text-white group-hover:text-purple-400">Manuel İndir</span>
+                        <span className="text-[9px] text-slate-500 block">Kendi sunucun</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Quick Info */}
-                  <div className="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
-                    <p className="text-[9px] text-indigo-400">
-                      💡 <b>İpucu:</b> Önce "Entegrasyon Merkezi"nden bot kodunu oluşturun, ardından "Canlıya Al" ile deploy edin.
+                  {/* Quick Deploy Button */}
+                  <button
+                    onClick={() => { setShowCodeExport(true); addLog('🚀 Deploy işlemi başlatıldı...', 'info'); }}
+                    className="w-full p-5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-center font-black text-white hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-600/30"
+                  >
+                    ⚡ HIZLI DEPLOY (GitHub Actions)
+                  </button>
+
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                    <p className="text-[9px] text-emerald-400">
+                      💡 <b>İpucu:</b> GitHub Actions seçerseniz, otomasyon her gün otomatik çalışır ve sonuçları size bildirir.
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-20 opacity-50">
-                  <span className="text-6xl mb-4 block">📁</span>
-                  <p className="text-sm text-slate-500">Önce KASA'dan bir sistem seçin</p>
+                  <span className="text-6xl mb-4 block">🚀</span>
+                  <p className="text-sm text-slate-500">Önce KEŞİF'ten bir otomasyon seç veya KASA'dan yükle</p>
                 </div>
               )}
             </div>
@@ -798,10 +995,49 @@ const App: React.FC = () => {
   );
 };
 
-const NavItem = ({ active, icon, onClick, title }: { active: boolean, icon: string, onClick: () => void, title: string }) => (
-  <div className="flex flex-col items-center gap-1 cursor-pointer group" onClick={onClick}>
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/40 translate-x-1' : 'text-slate-600 hover:bg-slate-800 hover:text-slate-400'}`}>{icon}</div>
-    <span className={`text-[6px] font-black uppercase tracking-widest transition-colors ${active ? 'text-indigo-500' : 'text-slate-700'}`}>{title}</span>
+// Enhanced NavItem with Tooltip
+const NavItem = ({
+  active,
+  icon,
+  onClick,
+  title,
+  tooltip,
+  step,
+  completed,
+  disabled
+}: {
+  active: boolean;
+  icon: string;
+  onClick: () => void;
+  title: string;
+  tooltip?: string;
+  step?: number;
+  completed?: boolean;
+  disabled?: boolean;
+}) => (
+  <div
+    className={`flex flex-col items-center gap-1 cursor-pointer group relative ${disabled ? 'opacity-40 pointer-events-none' : ''}`}
+    onClick={disabled ? undefined : onClick}
+  >
+    {/* Step Number Badge */}
+    {step && (
+      <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-black flex items-center justify-center z-10 ${completed ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+        {completed ? '✓' : step}
+      </div>
+    )}
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/40 scale-110' : completed ? 'bg-emerald-600/20 text-emerald-400' : 'text-slate-600 hover:bg-slate-800 hover:text-slate-400'}`}>
+      {icon}
+    </div>
+    <span className={`text-[6px] font-black uppercase tracking-widest transition-colors ${active ? 'text-indigo-400' : completed ? 'text-emerald-500' : 'text-slate-700'}`}>
+      {title}
+    </span>
+    {/* Tooltip */}
+    {tooltip && (
+      <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-[10px] text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 border-l border-b border-slate-700 rotate-45"></div>
+        {tooltip}
+      </div>
+    )}
   </div>
 );
 
