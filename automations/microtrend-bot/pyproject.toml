@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "microtrend-bot"
+version = "2.0.0"
+description = "MicroTrend Pullback Futures Trading Bot PRO"
+requires-python = ">=3.9"
+dependencies = [
+    "flask>=2.0.0",
+    "flask-cors>=3.0.0",
+    "requests>=2.28.0",
+    "python-dotenv>=0.20.0",
+    "gunicorn>=21.0.0",
+]

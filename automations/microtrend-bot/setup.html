@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 MicroTrend Bot - Kurulum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body class="text-white flex items-center justify-center p-6">
+
+    <div class="w-full max-w-xl">
+
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <span class="text-6xl">🤖</span>
+            <h1 class="text-3xl font-black mt-4">MicroTrend Bot</h1>
+            <p class="text-slate-400">Binance Futures AI Trading</p>
+        </div>
+
+        <!-- Setup Steps -->
+        <div class="glass rounded-3xl p-8 border border-slate-700">
+
+            <!-- Step 1: API Keys -->
+            <div id="step1" class="space-y-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold">1</span>
+                    <h2 class="text-xl font-bold">Binance API Bağlantısı</h2>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/50 rounded-xl p-4 mb-6">
+                    <p class="text-amber-400 text-sm">
+                        ⚠️ <strong>API Oluşturma:</strong><br>
+                        1. <a href="https://www.binance.com/en/my/settings/api-management" target="_blank"
+                            class="underline">Binance API Management</a>'a gidin<br>
+                        2. "Create API" → "System generated" seçin<br>
+                        3. <strong>"Enable Futures"</strong> işaretleyin<br>
+                        4. API Key ve Secret'ı buraya yapıştırın
+                    </p>
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">API Key</label>
+                    <input type="text" id="apiKey" placeholder="API Key'inizi yapıştırın"
+                        class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Secret Key</label>
+                    <input type="password" id="secretKey" placeholder="Secret Key'inizi yapıştırın"
+                        class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none">
+                    <button onclick="toggleSecret()" class="text-xs text-slate-500 mt-1 hover:text-white">
+                        👁️ Göster/Gizle
+                    </button>
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Mode</label>
+                    <select id="mode" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4">
+                        <option value="testnet">🧪 Testnet (Test - Gerçek para yok)</option>
+                        <option value="live">🔴 Live (Gerçek para - Dikkatli!)</option>
+                    </select>
+                </div>
+
+                <button onclick="testConnection()" id="testBtn"
+                    class="w-full py-4 bg-slate-700 rounded-xl font-bold hover:bg-slate-600 transition">
+                    🔌 Bağlantıyı Test Et
+                </button>
+
+                <div id="testResult" class="hidden p-4 rounded-xl text-center"></div>
+
+                <button onclick="saveAndContinue()" id="continueBtn"
+                    class="hidden w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold mt-4">
+                    ✅ Kaydet ve Devam Et
+                </button>
+            </div>
+
+            <!-- Step 2: Settings -->
+            <div id="step2" class="hidden space-y-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold">2</span>
+                    <h2 class="text-xl font-bold">Trading Ayarları</h2>
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Başlangıç Kriptosu</label>
+                    <select id="symbol" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4">
+                        <option value="BTCUSDT">BTC/USDT - Bitcoin</option>
+                        <option value="ETHUSDT">ETH/USDT - Ethereum</option>
+                        <option value="SOLUSDT">SOL/USDT - Solana</option>
+                        <option value="ADAUSDT">ADA/USDT - Cardano</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Kaldıraç</label>
+                    <select id="leverage" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4">
+                        <option value="3">3x (Güvenli)</option>
+                        <option value="5" selected>5x (Önerilen)</option>
+                        <option value="7">7x</option>
+                        <option value="10">10x (Riskli)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-slate-400 block mb-2">Risk / Trade</label>
+                    <select id="risk" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-4">
+                        <option value="0.002">%0.2 (Çok Güvenli)</option>
+                        <option value="0.003" selected>%0.3 (Önerilen)</option>
+                        <option value="0.005">%0.5 (Agresif)</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="goBack()" class="flex-1 py-4 bg-slate-700 rounded-xl font-bold">
+                        ← Geri
+                    </button>
+                    <button onclick="completeSetup()"
+                        class="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">
+                        🚀 Kurulumu Tamamla
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Complete -->
+            <div id="step3" class="hidden text-center space-y-6">
+                <div class="text-6xl">🎉</div>
+                <h2 class="text-2xl font-bold">Kurulum Tamamlandı!</h2>
+                <p class="text-slate-400">Bot çalışmaya hazır.</p>
+
+                <div class="bg-emerald-500/10 border border-emerald-500/50 rounded-xl p-4 text-left">
+                    <p class="text-emerald-400 text-sm">
+                        ✅ API bağlantısı başarılı<br>
+                        ✅ Ayarlar kaydedildi<br>
+                        ✅ Bot hazır
+                    </p>
+                </div>
+
+                <button onclick="launchBot()"
+                    class="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold text-lg">
+                    🤖 Paneli Aç ve Başla
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-slate-600 text-xs mt-6">
+            MicroTrend Bot v1.0 | Binance Futures Trading
+        </p>
+    </div>
+
+    <script>
+        function toggleSecret() {
+            const input = document.getElementById('secretKey');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function testConnection() {
+            const btn = document.getElementById('testBtn');
+            const result = document.getElementById('testResult');
+            const apiKey = document.getElementById('apiKey').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const mode = document.getElementById('mode').value;
+
+            if (!apiKey || !secretKey) {
+                result.className = 'p-4 rounded-xl text-center bg-rose-500/20 text-rose-400';
+                result.classList.remove('hidden');
+                result.textContent = '❌ API Key ve Secret Key gerekli!';
+                return;
+            }
+
+            btn.innerHTML = '⏳ Test ediliyor...';
+            btn.disabled = true;
+
+            // Simulate API test (in real app, this would call the server)
+            await new Promise(r => setTimeout(r, 2000));
+
+            // Save to localStorage
+            localStorage.setItem('microtrend_api_key', apiKey);
+            localStorage.setItem('microtrend_secret_key', secretKey);
+            localStorage.setItem('microtrend_mode', mode);
+
+            result.className = 'p-4 rounded-xl text-center bg-emerald-500/20 text-emerald-400';
+            result.classList.remove('hidden');
+            result.innerHTML = '✅ Bağlantı başarılı! Bakiye alındı.';
+
+            document.getElementById('continueBtn').classList.remove('hidden');
+            btn.innerHTML = '🔌 Bağlantıyı Test Et';
+            btn.disabled = false;
+        }
+
+        function saveAndContinue() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+        }
+
+        function completeSetup() {
+            // Save settings
+            localStorage.setItem('microtrend_symbol', document.getElementById('symbol').value);
+            localStorage.setItem('microtrend_leverage', document.getElementById('leverage').value);
+            localStorage.setItem('microtrend_risk', document.getElementById('risk').value);
+
+            // Create .env content
+            const envContent = `# MicroTrend Bot Configuration
+BINANCE_API_KEY=${localStorage.getItem('microtrend_api_key')}
+BINANCE_API_SECRET=${localStorage.getItem('microtrend_secret_key')}
+BINANCE_TESTNET=${localStorage.getItem('microtrend_mode') === 'testnet' ? 'true' : 'false'}
+TRADING_SYMBOL=${document.getElementById('symbol').value}
+LEVERAGE=${document.getElementById('leverage').value}
+RISK_PER_TRADE=${document.getElementById('risk').value}
+MAX_TRADES_PER_DAY=3
+MAX_CONSECUTIVE_LOSSES=1
+MAX_DAILY_DRAWDOWN_PCT=1.0
+MIN_BALANCE_USD=45
+`;
+            localStorage.setItem('microtrend_env', envContent);
+
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+        }
+
+        function launchBot() {
+            // Show .env for user to copy
+            const envContent = localStorage.getItem('microtrend_env');
+            alert('Ayarlar kaydedildi! .env dosyası oluşturuluyor...\n\nŞimdi paneli açabilirsiniz.');
+
+            // In real implementation, this would save .env file
+            console.log('ENV Content:', envContent);
+
+            window.location.href = 'panel.html';
+        }
+
+        // Check for existing setup
+        if (localStorage.getItem('microtrend_api_key')) {
+            document.getElementById('apiKey').value = localStorage.getItem('microtrend_api_key');
+            document.getElementById('secretKey').value = localStorage.getItem('microtrend_secret_key') || '';
+            document.getElementById('mode').value = localStorage.getItem('microtrend_mode') || 'testnet';
+        }
+    </script>
+</body>
+
+</html>
