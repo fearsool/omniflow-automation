@@ -57,6 +57,16 @@ export interface TestVariable {
   value: string;
 }
 
+// API Requirement tanımı (templateService'den import yerine duplicate)
+export interface ApiRequirement {
+  name: string;
+  label: string;
+  description: string;
+  link?: string;
+  required?: boolean;
+  placeholder?: string;
+}
+
 export interface SystemBlueprint {
   id: string;
   name: string;
@@ -70,6 +80,22 @@ export interface SystemBlueprint {
     variables: TestVariable[];
     simulateFailures: boolean;
   };
+  // 4 Adımlık İçerik Analizi Sonuçları
+  contentScore?: number; // 0-100, hızlı erişim için
+  contentAnalysis?: {
+    step1Score: number;
+    step2Score: number;
+    step3Score: number;
+    step4Score: number;
+    finalScore: number;
+    approved: boolean;
+    recommendations: string[];
+    analyzedAt: string; // ISO date
+  };
+  // Gerekli API anahtarları (deploy öncesi girilecek)
+  requiredApis?: ApiRequirement[];
+  // Girilen API değerleri
+  apiValues?: Record<string, string>;
 }
 
 // ============================================

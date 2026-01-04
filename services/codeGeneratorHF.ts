@@ -122,7 +122,7 @@ def call_hf_with_retry(
     if not HF_TOKEN:
         return False, '', 'HUGGINGFACE_TOKEN bulunamadı'
     
-    url = f'https://api-inference.huggingface.co/models/{model}'
+    url = 'https://router.huggingface.co/v1/chat/completions'
     headers = {
         'Authorization': f'Bearer {HF_TOKEN}',
         'Content-Type': 'application/json',
@@ -134,12 +134,13 @@ def call_hf_with_retry(
                 url,
                 headers=headers,
                 json={
-                    'inputs': prompt,
-                    'parameters': {
-                        'max_new_tokens': 512,
-                        'temperature': 0.7,
-                        'do_sample': True,
-                    }
+                    'model': model,
+                    'messages': [
+                        {'role': 'user', 'content': prompt}
+                    ],
+                    'max_tokens': 512,
+                    'temperature': 0.7,
+                    'stream': False
                 },
                 timeout=REQUEST_TIMEOUT
             )
@@ -163,7 +164,13 @@ def call_hf_with_retry(
             # Başarılı?
             if response.status_code == 200:
                 data = response.json()
-                output = data[0].get('generated_text', '') if isinstance(data, list) else data.get('generated_text', '')
+                # Chat Completions format parsing
+                if 'choices' in data and len(data['choices']) > 0:
+                    output = data['choices'][0].get('message', {}).get('content', '')
+                elif isinstance(data, list) and len(data) > 0:
+                    output = data[0].get('generated_text', '')
+                else:
+                    output = data.get('generated_text', '')
                 return True, str(output).strip(), ''
             
             # Ciddi hata
@@ -578,20 +585,32 @@ async function callHFWithRetry(prompt, model = 'mistralai/Mistral-7B-Instruct-v0
     return { success: false, output: '', error: 'HUGGINGFACE_TOKEN not found' };
   }
   
-  const url = \`https://api-inference.huggingface.co/models/\${model}\`;
+  const url = 'https://router.huggingface.co/v1/chat/completions';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       const data = JSON.stringify({
-        inputs: prompt,
-        parameters: { max_new_tokens: 512, temperature: 0.7, do_sample: true }
+        model: model,
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 512,
+        temperature: 0.7,
+        stream: false
       });
       
       const res = await post(url, data);
       
       if (res.status === 200) {
         const parsed = JSON.parse(res.body);
-        const output = Array.isArray(parsed) ? parsed[0]?.generated_text : parsed?.generated_text;
+        let output = '';
+        if (parsed.choices && parsed.choices.length > 0) {
+          output = parsed.choices[0].message?.content || '';
+        } else if (Array.isArray(parsed)) {
+          output = parsed[0]?.generated_text || '';
+        } else {
+          output = parsed?.generated_text || '';
+        }
         return { success: true, output: String(output).trim(), error: '' };
       }
       
@@ -773,7 +792,7 @@ DB_FILE=workflow_execution.db
 
 export const generateGitHubAction = (blueprint: SystemBlueprint): GeneratedCode[] => {
   const workflow = `.github/workflows/${blueprint.name.toLowerCase().replace(/\\s+/g, '-')}.yml`;
-  
+
   const content = `name: ${blueprint.name}
 
 on:

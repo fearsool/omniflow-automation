@@ -144,7 +144,7 @@ def call_hf_with_retry(prompt: str, model: str = None, max_retries: int = MAX_RE
         print("[HF] Token bulunamadı, Ollama'ya fallback...")
         return call_ollama(prompt)
     
-    url = f'https://api-inference.huggingface.co/models/{model}'
+    url = 'https://router.huggingface.co/v1/chat/completions'
     headers = {
         'Authorization': f'Bearer {HF_TOKEN}',
         'Content-Type': 'application/json',
@@ -156,12 +156,13 @@ def call_hf_with_retry(prompt: str, model: str = None, max_retries: int = MAX_RE
                 url,
                 headers=headers,
                 json={
-                    'inputs': prompt,
-                    'parameters': {
-                        'max_new_tokens': 512,
-                        'temperature': 0.7,
-                        'do_sample': True,
-                    }
+                    'model': model,
+                    'messages': [
+                        {'role': 'user', 'content': prompt}
+                    ],
+                    'max_tokens': 512,
+                    'temperature': 0.7,
+                    'stream': False
                 },
                 timeout=REQUEST_TIMEOUT
             )
@@ -185,7 +186,13 @@ def call_hf_with_retry(prompt: str, model: str = None, max_retries: int = MAX_RE
             # Başarılı?
             if response.status_code == 200:
                 data = response.json()
-                output = data[0].get('generated_text', '') if isinstance(data, list) else data.get('generated_text', '')
+                # Chat Completions format parsing
+                if 'choices' in data and len(data['choices']) > 0:
+                    output = data['choices'][0].get('message', {}).get('content', '')
+                elif isinstance(data, list) and len(data) > 0:
+                    output = data[0].get('generated_text', '')
+                else:
+                    output = data.get('generated_text', '')
                 return True, str(output).strip(), ''
             
             # Ciddi hata

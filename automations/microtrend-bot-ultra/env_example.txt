@@ -1,0 +1,39 @@
+# Binance API
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_api_secret_here
+
+# Testnet (true = test modu, false = gerçek işlem)
+BINANCE_TESTNET=true
+
+# Trading Modu: scalping, grid, dca, arbitrage
+TRADING_MODE=scalping
+
+# Paper Trading (risksiz simülasyon)
+PAPER_TRADING=true
+PAPER_BALANCE=100
+
+# Coin seçimi
+TRADING_SYMBOL=BTCUSDT
+
+# Risk Ayarları
+LEVERAGE=5
+RISK_PER_TRADE=0.003
+MAX_TRADES_PER_DAY=3
+MAX_CONSECUTIVE_LOSSES=1
+MAX_DAILY_DRAWDOWN_PCT=1.0
+MIN_BALANCE_USD=45
+
+# ULTRA Özellikleri
+MULTI_TF_ENABLED=true
+WHALE_ALERT_ENABLED=true
+FEAR_GREED_ENABLED=true
+AUTO_COMPOUND=true
+
+# Trailing TP
+TRAILING_TP=true
+TRAILING_TP_ACTIVATION=0.3
+TRAILING_TP_CALLBACK=0.1
+
+# Telegram Bildirimleri
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=

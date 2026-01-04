@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SystemBlueprint } from '../types';
 import { Button } from './Button';
+import { ApiConfigPanel } from './ApiConfigPanel';
 
 interface DeploymentPanelProps {
     blueprint: SystemBlueprint | null;
     onClose: () => void;
+    onUpdateBlueprint?: (updatedBlueprint: SystemBlueprint) => void;
 }
 
 type DeployPlatform = 'railway' | 'render' | 'vercel' | 'netlify';
@@ -17,15 +19,43 @@ const platforms: { id: DeployPlatform; name: string; icon: string; url: string; 
     { id: 'netlify', name: 'Netlify', icon: '◆', url: 'https://netlify.com', description: 'Serverless functions' }
 ];
 
-export const DeploymentPanel: React.FC<DeploymentPanelProps> = ({ blueprint, onClose }) => {
+export const DeploymentPanel: React.FC<DeploymentPanelProps> = ({ blueprint, onClose, onUpdateBlueprint }) => {
     const [selectedPlatform, setSelectedPlatform] = useState<DeployPlatform>('railway');
     const [envVars, setEnvVars] = useState<{ key: string; value: string }[]>([
         { key: 'HUGGINGFACE_TOKEN', value: '' },
         { key: 'NODE_ENV', value: 'production' }
     ]);
     const [deployStatus, setDeployStatus] = useState<'idle' | 'preparing' | 'ready'>('idle');
+    const [showApiConfig, setShowApiConfig] = useState(false);
+    const [apiConfigured, setApiConfigured] = useState(false);
+
+    // Blueprint'te requiredApis varsa ve henüz girilmemişse, API config panel göster
+    useEffect(() => {
+        if (blueprint?.requiredApis && blueprint.requiredApis.length > 0 && !blueprint.apiValues) {
+            setShowApiConfig(true);
+        }
+    }, [blueprint]);
 
     if (!blueprint) return null;
+
+    const handleApiSave = (apiValues: Record<string, string>) => {
+        // API değerlerini envVars'a ekle
+        const newEnvVars = Object.entries(apiValues).map(([key, value]) => ({ key, value }));
+        setEnvVars(prev => [...prev, ...newEnvVars]);
+
+        // Blueprint'e apiValues ekle
+        if (onUpdateBlueprint) {
+            onUpdateBlueprint({ ...blueprint, apiValues });
+        }
+
+        setShowApiConfig(false);
+        setApiConfigured(true);
+        console.log('✅ API anahtarları kaydedildi');
+    };
+
+    const handleApiCancel = () => {
+        setShowApiConfig(false);
+    };
 
     const addEnvVar = () => {
         setEnvVars([...envVars, { key: '', value: '' }]);
@@ -139,118 +169,183 @@ ${envVars.map(e => `${e.key}=${e.value || 'YOUR_VALUE'}`).join('\n')}
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-4xl bg-[#0a0f1e] border border-slate-800 rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <>
+            {/* API Yapılandırma Paneli - requiredApis varsa göster */}
+            {showApiConfig && blueprint.requiredApis && (
+                <ApiConfigPanel
+                    templateName={blueprint.name}
+                    requiredApis={blueprint.requiredApis}
+                    onSave={handleApiSave}
+                    onCancel={handleApiCancel}
+                />
+            )}
 
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-tight">🚀 Deploy Merkezi</h2>
-                        <p className="text-xs text-slate-500 mt-1">{blueprint.name} sistemini canlıya al</p>
-                    </div>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                <div className="w-full max-w-4xl bg-[#0a0f1e] border border-slate-800 rounded-[2rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
 
-                {/* Platform Selection */}
-                <div className="grid grid-cols-4 gap-3 mb-8">
-                    {platforms.map(platform => (
-                        <button
-                            key={platform.id}
-                            onClick={() => { setSelectedPlatform(platform.id); setDeployStatus('idle'); }}
-                            className={`p-4 rounded-xl border-2 transition-all text-left ${selectedPlatform === platform.id
-                                ? 'border-emerald-500 bg-emerald-500/10'
-                                : 'border-slate-800 hover:border-slate-600'
-                                }`}
-                        >
-                            <span className="text-2xl">{platform.icon}</span>
-                            <p className="text-xs font-bold text-white mt-2">{platform.name}</p>
-                            <p className="text-[8px] text-slate-500 mt-1">{platform.description}</p>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Environment Variables */}
-                <div className="bg-[#020617] border border-slate-800 rounded-2xl p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-bold text-indigo-400 uppercase">🔐 Environment Variables</h3>
-                        <button
-                            onClick={addEnvVar}
-                            className="text-xs text-indigo-400 hover:text-indigo-300"
-                        >
-                            + Ekle
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">🚀 Deploy Merkezi</h2>
+                            <p className="text-xs text-slate-500 mt-1">{blueprint.name} sistemini canlıya al</p>
+                        </div>
+                        <button onClick={onClose} className="text-slate-500 hover:text-white">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
 
-                    <div className="space-y-3">
-                        {envVars.map((env, idx) => (
-                            <div key={idx} className="flex gap-2 items-center">
-                                <input
-                                    type="text"
-                                    className="flex-1 bg-[#0a0f1e] border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"
-                                    placeholder="KEY"
-                                    value={env.key}
-                                    onChange={(e) => updateEnvVar(idx, 'key', e.target.value)}
-                                />
-                                <input
-                                    type="password"
-                                    className="flex-1 bg-[#0a0f1e] border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"
-                                    placeholder="value"
-                                    value={env.value}
-                                    onChange={(e) => updateEnvVar(idx, 'value', e.target.value)}
-                                />
-                                <button
-                                    onClick={() => removeEnvVar(idx)}
-                                    className="text-slate-500 hover:text-rose-500"
-                                >
-                                    ✕
-                                </button>
+                    {/* İçerik Puanı Gösterimi */}
+                    {blueprint.contentScore !== undefined ? (
+                        <div className={`mb-6 p-4 rounded-xl border ${blueprint.contentScore >= 70
+                            ? 'bg-emerald-500/10 border-emerald-500/30'
+                            : 'bg-rose-500/10 border-rose-500/30'
+                            }`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className={`text-3xl font-black ${blueprint.contentScore >= 90 ? 'text-emerald-400' :
+                                        blueprint.contentScore >= 70 ? 'text-yellow-400' :
+                                            'text-rose-400'
+                                        }`}>
+                                        {blueprint.contentScore}
+                                    </span>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">İçerik Puanı</p>
+                                        <p className="text-[10px] text-slate-400">4 Adımlık Bilimsel Analiz</p>
+                                    </div>
+                                </div>
+                                {blueprint.contentScore >= 70 ? (
+                                    <span className="text-xs px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full">
+                                        ✅ Deploy'a Hazır
+                                    </span>
+                                ) : (
+                                    <span className="text-xs px-3 py-1 bg-rose-500/20 text-rose-400 rounded-full">
+                                        ⚠️ Puan Yetersiz (Min: 70)
+                                    </span>
+                                )}
                             </div>
+                        </div>
+                    ) : (
+                        <div className="mb-6 p-4 rounded-xl border bg-amber-500/10 border-amber-500/30">
+                            <div className="flex items-center gap-3">
+                                <span className="text-2xl">⚠️</span>
+                                <div>
+                                    <p className="text-sm font-bold text-amber-400">4 Adımlık Analiz Yapılmadı</p>
+                                    <p className="text-[10px] text-slate-400">Deploy için önce Template Marketplace'den şablon seçin ve 4 adımlık analizi tamamlayın.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Platform Selection */}
+                    <div className="grid grid-cols-4 gap-3 mb-8">
+                        {platforms.map(platform => (
+                            <button
+                                key={platform.id}
+                                onClick={() => { setSelectedPlatform(platform.id); setDeployStatus('idle'); }}
+                                className={`p-4 rounded-xl border-2 transition-all text-left ${selectedPlatform === platform.id
+                                    ? 'border-emerald-500 bg-emerald-500/10'
+                                    : 'border-slate-800 hover:border-slate-600'
+                                    }`}
+                            >
+                                <span className="text-2xl">{platform.icon}</span>
+                                <p className="text-xs font-bold text-white mt-2">{platform.name}</p>
+                                <p className="text-[8px] text-slate-500 mt-1">{platform.description}</p>
+                            </button>
                         ))}
                     </div>
-                </div>
 
-                {/* Prepare Deploy */}
-                <Button
-                    onClick={handlePrepare}
-                    className="w-full bg-emerald-600 rounded-xl h-12 mb-6"
-                    isLoading={deployStatus === 'preparing'}
-                >
-                    {deployStatus === 'ready' ? '✅ Hazır!' : '📋 Deploy Talimatlarını Hazırla'}
-                </Button>
-
-                {/* Deploy Instructions */}
-                {deployStatus === 'ready' && (
-                    <div className="bg-[#020617] border border-emerald-500/30 rounded-2xl p-6 animate-in slide-in-from-bottom-4">
+                    {/* Environment Variables */}
+                    <div className="bg-[#020617] border border-slate-800 rounded-2xl p-6 mb-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-emerald-400 uppercase">
-                                📋 {platforms.find(p => p.id === selectedPlatform)?.name} Deploy Talimatları
-                            </h3>
-                            <a
-                                href={platforms.find(p => p.id === selectedPlatform)?.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-indigo-400 hover:underline"
+                            <h3 className="text-sm font-bold text-indigo-400 uppercase">🔐 Environment Variables</h3>
+                            <button
+                                onClick={addEnvVar}
+                                className="text-xs text-indigo-400 hover:text-indigo-300"
                             >
-                                {platforms.find(p => p.id === selectedPlatform)?.url} ↗
-                            </a>
+                                + Ekle
+                            </button>
                         </div>
 
-                        <pre className="bg-black/50 p-4 rounded-xl overflow-x-auto text-[10px] text-slate-300 font-mono whitespace-pre-wrap">
-                            {getDeployInstructions()}
-                        </pre>
-
-                        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                            <p className="text-[10px] text-amber-400">
-                                💡 <b>İpucu:</b> Önce "Kod Export" ile dosyaları indirin, sonra bu talimatları takip edin.
-                            </p>
+                        <div className="space-y-3">
+                            {envVars.map((env, idx) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        className="flex-1 bg-[#0a0f1e] border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"
+                                        placeholder="KEY"
+                                        value={env.key}
+                                        onChange={(e) => updateEnvVar(idx, 'key', e.target.value)}
+                                    />
+                                    <input
+                                        type="password"
+                                        className="flex-1 bg-[#0a0f1e] border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"
+                                        placeholder="value"
+                                        value={env.value}
+                                        onChange={(e) => updateEnvVar(idx, 'value', e.target.value)}
+                                    />
+                                    <button
+                                        onClick={() => removeEnvVar(idx)}
+                                        className="text-slate-500 hover:text-rose-500"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )}
+
+                    {/* Prepare Deploy */}
+                    <Button
+                        onClick={handlePrepare}
+                        className={`w-full rounded-xl h-12 mb-6 ${blueprint.contentScore === undefined || blueprint.contentScore < 70
+                            ? 'bg-slate-600 cursor-not-allowed'
+                            : 'bg-emerald-600'
+                            }`}
+                        isLoading={deployStatus === 'preparing'}
+                        disabled={blueprint.contentScore === undefined || blueprint.contentScore < 70}
+                    >
+                        {blueprint.contentScore === undefined
+                            ? '⚠️ Önce 4 Adımlık Analizi Tamamlayın'
+                            : blueprint.contentScore < 70
+                                ? `⚠️ Puan Yetersiz (${blueprint.contentScore}/70)`
+                                : deployStatus === 'ready'
+                                    ? '✅ Hazır!'
+                                    : '📋 Deploy Talimatlarını Hazırla'
+                        }
+                    </Button>
+
+                    {/* Deploy Instructions */}
+                    {deployStatus === 'ready' && (
+                        <div className="bg-[#020617] border border-emerald-500/30 rounded-2xl p-6 animate-in slide-in-from-bottom-4">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-sm font-bold text-emerald-400 uppercase">
+                                    📋 {platforms.find(p => p.id === selectedPlatform)?.name} Deploy Talimatları
+                                </h3>
+                                <a
+                                    href={platforms.find(p => p.id === selectedPlatform)?.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-indigo-400 hover:underline"
+                                >
+                                    {platforms.find(p => p.id === selectedPlatform)?.url} ↗
+                                </a>
+                            </div>
+
+                            <pre className="bg-black/50 p-4 rounded-xl overflow-x-auto text-[10px] text-slate-300 font-mono whitespace-pre-wrap">
+                                {getDeployInstructions()}
+                            </pre>
+
+                            <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                                <p className="text-[10px] text-amber-400">
+                                    💡 <b>İpucu:</b> Önce "Kod Export" ile dosyaları indirin, sonra bu talimatları takip edin.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </>
     );
 };

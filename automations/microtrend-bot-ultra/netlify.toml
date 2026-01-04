@@ -11,9 +11,8 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
 
-# SPA routing - sayfa yenilenince panel.html'e yönlendir
+# SPA routing
 [[redirects]]
   from = "/*"
-  to = "/panel.html"
+  to = "/panel_ultra.html"
   status = 200
-  conditions = {Role = ["admin"]}
