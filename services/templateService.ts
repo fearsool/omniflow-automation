@@ -1191,18 +1191,18 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
 // ============================================
 
 export const TEMPLATE_CATEGORIES = {
+    'digital': { name: 'Dijital Ürün', icon: '🛍️', color: 'violet' },
     'money-maker': { name: 'Para Kazandıran', icon: '💰', color: 'emerald' },
-    'assistant': { name: 'Asistan Botlar', icon: '🤖', color: 'blue' },
-    'scraper': { name: 'Veri Toplama', icon: '🕷️', color: 'purple' },
-    'content': { name: 'İçerik Üretimi', icon: '🎨', color: 'pink' },
-    'analytics': { name: 'Analiz & Rapor', icon: '📊', color: 'amber' },
-    'video': { name: 'Video Üretimi (OVI)', icon: '🎬', color: 'red' },
-    'finance': { name: 'Finans & Yatırım', icon: '📈', color: 'green' },
-    'health': { name: 'Sağlık & Wellness', icon: '🏥', color: 'teal' },
-    'education': { name: 'Eğitim & Öğrenme', icon: '📚', color: 'indigo' },
     'ecommerce': { name: 'E-Ticaret', icon: '🛒', color: 'orange' },
-    'customer': { name: 'Müşteri Hizmetleri', icon: '🎫', color: 'cyan' },
-    'digital': { name: 'Dijital Ürün', icon: '🛍️', color: 'violet' }
+    'content': { name: 'İçerik', icon: '🎨', color: 'pink' },
+    'assistant': { name: 'Asistan', icon: '🤖', color: 'blue' },
+    'video': { name: 'Video', icon: '🎬', color: 'red' },
+    'scraper': { name: 'Veri', icon: '🕷️', color: 'purple' },
+    'analytics': { name: 'Analiz', icon: '📊', color: 'amber' },
+    'finance': { name: 'Finans', icon: '📈', color: 'green' },
+    'health': { name: 'Sağlık', icon: '🏥', color: 'teal' },
+    'education': { name: 'Eğitim', icon: '📚', color: 'indigo' },
+    'customer': { name: 'Müşteri', icon: '🎫', color: 'cyan' }
 };
 
 // ============================================
