@@ -1202,7 +1202,7 @@ export const TEMPLATE_CATEGORIES = {
     'education': { name: 'Eğitim & Öğrenme', icon: '📚', color: 'indigo' },
     'ecommerce': { name: 'E-Ticaret', icon: '🛒', color: 'orange' },
     'customer': { name: 'Müşteri Hizmetleri', icon: '🎫', color: 'cyan' },
-    'digital': { name: 'Dijital Ürün & Etsy', icon: '🛍️', color: 'violet' }
+    'digital': { name: 'Dijital Ürün', icon: '🛍️', color: 'violet' }
 };
 
 // ============================================
