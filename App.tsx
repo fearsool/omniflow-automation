@@ -10,6 +10,7 @@ import { TemplateMarketplace } from './components/TemplateMarketplace';
 import { AgentMonitorDashboard } from './components/AgentMonitorDashboard';
 import { CloudSettings } from './components/CloudSettings';
 import { ImageGenerator } from './components/ImageGenerator';
+import { AutomationRunnerModal } from './components/AutomationRunnerModal';
 import { architectSystem, runAgentNode, getMarketOpportunities, autoFillField, generateDiscoveryQuestions } from './services/huggingfaceNativeService';
 import { callHuggingFaceModel, buildHFPrompt, selectBestModel } from './services/huggingfaceService';
 import { agentQueue, AgentTask } from './services/agentQueueService';
@@ -28,6 +29,7 @@ const App: React.FC = () => {
   const [showAgentMonitor, setShowAgentMonitor] = useState(false); // Agent Health Monitor
   const [showCloudSettings, setShowCloudSettings] = useState(false); // Cloud Settings
   const [showImageGenerator, setShowImageGenerator] = useState(false); // Image Generator
+  const [showAutomationRunner, setShowAutomationRunner] = useState(false); // Automation Runner
   const [selectedBlueprint, setSelectedBlueprint] = useState<SystemBlueprint | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -124,7 +126,7 @@ const App: React.FC = () => {
     try {
       const systemDescription = `${goal}\n\nBağlam:\n${contextStr}`;
       const result = await architectSystem(systemDescription);
-      
+
       const newBp: SystemBlueprint = {
         id: crypto.randomUUID(),
         name,
@@ -259,7 +261,7 @@ const App: React.FC = () => {
 
         // ✅ HuggingFace ile node'u çalıştır
         const result = await runGraphNode(node, selectedBlueprint, history);
-        
+
         nodes[currentIdx].status = StepStatus.SUCCESS;
         nodes[currentIdx].outputData = result;
         history = [...history, { nodeId: node.id, output: result }];
@@ -357,6 +359,12 @@ const App: React.FC = () => {
           onClose={() => setShowImageGenerator(false)}
         />
       )}
+      {showAutomationRunner && (
+        <AutomationRunnerModal
+          isOpen={showAutomationRunner}
+          onClose={() => setShowAutomationRunner(false)}
+        />
+      )}
 
       {/* SIDEBAR NAVIGATION */}
       <nav className="w-20 bg-[#0a0f1e] border-r border-slate-800 flex flex-col items-center py-6 gap-4 z-50 overflow-y-auto">
@@ -440,6 +448,23 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <span className="text-indigo-400 text-xs">KEŞFET →</span>
+                    </div>
+                  </button>
+
+                  {/* GERÇEK ÇALIŞTIR BUTONU */}
+                  <button
+                    onClick={() => setShowAutomationRunner(true)}
+                    className="w-full p-4 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/30 rounded-2xl hover:border-emerald-500 transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl group-hover:scale-110 transition-transform">⚡</span>
+                        <div className="text-left">
+                          <p className="text-sm font-bold text-white">Gerçek Otomasyon Çalıştır</p>
+                          <p className="text-[10px] text-slate-400">AI ile içerik üret - 10+ otomasyon</p>
+                        </div>
+                      </div>
+                      <span className="text-emerald-400 text-xs">BAŞLAT →</span>
                     </div>
                   </button>
 
