@@ -74,9 +74,9 @@ CONFIG = {
     "TRAILING_TP_ACTIVATION": float(os.getenv("TRAILING_TP_ACTIVATION", "0.3")),
     "TRAILING_TP_CALLBACK": float(os.getenv("TRAILING_TP_CALLBACK", "0.1")),
     
-    # ULTRA: Multi-Timeframe Confluence
+    # ULTRA: Multi-Timeframe Confluence - GEVŞETİLDİ
     "MULTI_TF_ENABLED": os.getenv("MULTI_TF_ENABLED", "true").lower() == "true",
-    "MULTI_TF_REQUIRED": int(os.getenv("MULTI_TF_REQUIRED", "3")),  # 4'ten 3'ü uymalı
+    "MULTI_TF_REQUIRED": int(os.getenv("MULTI_TF_REQUIRED", "2")),  # 3'ten 2'ye - daha kolay
     
     # ULTRA: Whale Alert
     "WHALE_ALERT_ENABLED": os.getenv("WHALE_ALERT_ENABLED", "true").lower() == "true",
@@ -98,11 +98,11 @@ CONFIG = {
     "MAX_FUNDING_RATE": float(os.getenv("MAX_FUNDING_RATE", "0.0003")),
     "MIN_ATR_PCT": float(os.getenv("MIN_ATR_PCT", "0.1")),
     
-    # RSI
-    "RSI_LONG_MIN": int(os.getenv("RSI_LONG_MIN", "40")),
-    "RSI_LONG_MAX": int(os.getenv("RSI_LONG_MAX", "50")),
-    "RSI_SHORT_MIN": int(os.getenv("RSI_SHORT_MIN", "50")),
-    "RSI_SHORT_MAX": int(os.getenv("RSI_SHORT_MAX", "60")),
+    # RSI - GEVŞETİLDİ: Daha geniş aralık
+    "RSI_LONG_MIN": int(os.getenv("RSI_LONG_MIN", "35")),  # 40'tan 35'e
+    "RSI_LONG_MAX": int(os.getenv("RSI_LONG_MAX", "55")),  # 50'den 55'e
+    "RSI_SHORT_MIN": int(os.getenv("RSI_SHORT_MIN", "45")),  # 50'den 45'e
+    "RSI_SHORT_MAX": int(os.getenv("RSI_SHORT_MAX", "65")),  # 60'tan 65'e
     
     # Telegram
     "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN", ""),
@@ -170,7 +170,7 @@ def should_trade_by_fear_greed() -> Tuple[bool, str]:
         return True, f"Extreme Fear ({value}) - Agresif AL fırsatı"
     elif value >= 75:
         return True, f"Extreme Greed ({value}) - Kısa pozisyon fırsatı"
-    elif 45 <= value <= 55:
+    elif 48 <= value <= 52:  # GEVŞETİLDİ: 45-55'ten 48-52'ye daraltıldı
         return False, f"Neutral ({value}) - Bekle"
     
     return True, f"Fear & Greed: {value} ({fg['classification']})"
