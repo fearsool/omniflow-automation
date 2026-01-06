@@ -5,6 +5,62 @@
 
 // Handler tipi
 
+// Kategori bazlı prompt şablonları
+const CATEGORY_PROMPTS: Record<string, string> = {
+    "content": "Sen profesyonel bir içerik üreticisisin. Türkçe ve SEO uyumlu içerik üret.",
+    "social": "Sen viral sosyal medya içerik uzmanısın. Platform kurallarına uygun, hashtag ve emoji içeren içerik üret.",
+    "ecommerce": "Sen e-ticaret ve satış uzmanısın. İkna edici, ürün odaklı içerik üret.",
+    "seo": "Sen SEO uzmanısın. Arama motorları için optimize edilmiş içerik üret.",
+    "ai": "Sen yapay zeka uzmanısın. Teknik ve anlaşılır içerik üret.",
+    "finance": "Sen finans analistisin. Dikkatli ve bilgilendirici içerik üret.",
+    "video": "Sen viral video script uzmanısın. Hook ve CTA odaklı içerik üret.",
+    "customer": "Sen müşteri hizmetleri uzmanısın. Profesyonel ve yardımcı ol.",
+    "default": "Sen profesyonel bir yapay zeka asistanısın. Türkçe ve profesyonel içerik üret."
+};
+
+// Template ID'den kategori çıkar
+function getCategoryFromId(templateId: string): string {
+    const categoryMap: Record<string, string> = {
+        'blog': 'content', 'article': 'content', 'post': 'content', 'writer': 'content',
+        'instagram': 'social', 'twitter': 'social', 'tweet': 'social', 'linkedin': 'social', 'facebook': 'social', 'tiktok': 'social',
+        'etsy': 'ecommerce', 'amazon': 'ecommerce', 'product': 'ecommerce', 'listing': 'ecommerce', 'shop': 'ecommerce',
+        'seo': 'seo', 'meta': 'seo', 'keyword': 'seo',
+        'ai': 'ai', 'gpt': 'ai', 'bot': 'ai', 'automation': 'ai',
+        'crypto': 'finance', 'trading': 'finance', 'invest': 'finance', 'money': 'finance',
+        'video': 'video', 'reels': 'video', 'script': 'video', 'hook': 'video',
+        'email': 'customer', 'support': 'customer', 'reply': 'customer', 'response': 'customer'
+    };
+
+    const id = templateId.toLowerCase();
+    for (const [keyword, cat] of Object.entries(categoryMap)) {
+        if (id.includes(keyword)) return cat;
+    }
+    return 'default';
+}
+
+// Universal prompt oluşturucu
+function generateUniversalPrompt(templateId: string, input: string): string {
+    const category = getCategoryFromId(templateId);
+    const basePrompt = CATEGORY_PROMPTS[category] || CATEGORY_PROMPTS['default'];
+
+    // Template ID'den okunabilir isim oluştur
+    const readableName = templateId
+        .split(/[-_]/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+
+    return `${basePrompt}
+
+GÖREV: ${readableName}
+
+KULLANICI GİRDİSİ:
+${input || "Genel bir örnek oluştur"}
+
+Lütfen yukarıdaki görevi tamamla. Türkçe, profesyonel ve değerli içerik üret. Format ve yapıya dikkat et.
+
+ÇIKTI:`;
+}
+
 // HuggingFace API çağrısı
 async function callHuggingFace(prompt: string): Promise<string> {
     const token = process.env.HUGGINGFACE_TOKEN;
@@ -244,15 +300,37 @@ const handler = async (event: { httpMethod: string; body: string | null }, conte
             };
         }
 
+        // UNIVERSAL MODE: templateId ile herhangi bir şablon çalıştır
+        if (type === "universal" && params.templateId) {
+            const universalPrompt = generateUniversalPrompt(params.templateId, params.input || "");
+            const result = await callHuggingFace(universalPrompt);
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    type: "universal",
+                    templateId: params.templateId,
+                    result,
+                    timestamp: new Date().toISOString()
+                })
+            };
+        }
+
         // Prompt oluştur
         const promptFn = AUTOMATION_PROMPTS[type];
         if (!promptFn) {
+            // Bilinmeyen tip için universal prompt kullan
+            const universalPrompt = generateUniversalPrompt(type, params.input || params.topic || "");
+            const result = await callHuggingFace(universalPrompt);
             return {
-                statusCode: 400,
+                statusCode: 200,
                 headers,
                 body: JSON.stringify({
-                    error: `Unknown automation type: ${type}`,
-                    available: Object.keys(AUTOMATION_PROMPTS)
+                    success: true,
+                    type,
+                    result,
+                    timestamp: new Date().toISOString()
                 })
             };
         }
