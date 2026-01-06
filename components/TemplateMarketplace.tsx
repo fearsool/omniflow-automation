@@ -204,12 +204,29 @@ export const TemplateMarketplace: React.FC<TemplateMarketplaceProps> = ({ onSele
                                         ))}
                                     </div>
 
-                                    <button
-                                        onClick={() => handleUseTemplate(selectedTemplate)}
-                                        className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
-                                    >
-                                        🚀 BU ŞABLONU KULLAN
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleUseTemplate(selectedTemplate)}
+                                            className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all"
+                                        >
+                                            🚀 ŞABLONU KULLAN
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                // Gerçek Python kodunu göster
+                                                const realTemplates = ['blog-post-generator', 'instagram-caption-generator', 'etsy-seo-generator', 'tweet-generator', 'email-responder'];
+                                                if (realTemplates.includes(selectedTemplate.id)) {
+                                                    alert(`✅ Bu şablon GERÇEK çalışıyor!\n\n📁 Dosya: automations/real-automations/${selectedTemplate.id.replace(/-/g, '_')}.py\n\n💡 Kullanım:\n1. pip install -r requirements.txt\n2. .env dosyasına HUGGINGFACE_TOKEN ekle\n3. python ${selectedTemplate.id.replace(/-/g, '_')}.py`);
+                                                } else {
+                                                    alert('⚠️ Bu şablon henüz gerçek çalışan versiyona sahip değil.\n\nGerçek çalışan 5 şablon:\n• Blog Yazısı Üretici\n• Instagram Caption Üretici\n• Etsy SEO Üretici\n• Tweet Üretici\n• Email Yanıtlayıcı');
+                                                }
+                                            }}
+                                            className="px-4 py-4 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all"
+                                            title="Gerçek Python kodunu çalıştır"
+                                        >
+                                            ⚡ GERÇEK
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
