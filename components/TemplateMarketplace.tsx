@@ -18,6 +18,13 @@ export const TemplateMarketplace: React.FC<TemplateMarketplaceProps> = ({ onSele
     const [pendingTemplate, setPendingTemplate] = useState<AutomationTemplate | null>(null);
     const [autoAnswers, setAutoAnswers] = useState<Record<string, string> | undefined>(undefined);
 
+    // Gerçek çalıştırma state'leri
+    const [showRunModal, setShowRunModal] = useState(false);
+    const [runInput, setRunInput] = useState('');
+    const [runResult, setRunResult] = useState<string | null>(null);
+    const [isRunning, setIsRunning] = useState(false);
+    const [runError, setRunError] = useState<string | null>(null);
+
     const filteredTemplates = AUTOMATION_TEMPLATES.filter(template => {
         const matchesCategory = !selectedCategory || template.category === selectedCategory;
         const matchesSearch = !searchQuery ||
@@ -83,6 +90,48 @@ export const TemplateMarketplace: React.FC<TemplateMarketplaceProps> = ({ onSele
         setAutoAnswers(undefined);
     };
 
+    // Gerçek çalıştırma handler'ı
+    const handleRunReal = async () => {
+        if (!selectedTemplate || !runInput.trim()) return;
+
+        setIsRunning(true);
+        setRunError(null);
+        setRunResult(null);
+
+        try {
+            const response = await fetch('/.netlify/functions/run-automation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'universal',
+                    params: {
+                        templateId: selectedTemplate.id,
+                        input: runInput
+                    }
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setRunResult(data.result);
+            } else {
+                setRunError(data.error || 'Bilinmeyen hata');
+            }
+        } catch (error) {
+            setRunError(error instanceof Error ? error.message : 'Bağlantı hatası');
+        } finally {
+            setIsRunning(false);
+        }
+    };
+
+    const handleCloseRunModal = () => {
+        setShowRunModal(false);
+        setRunInput('');
+        setRunResult(null);
+        setRunError(null);
+    };
+
     const difficultyColors = {
         easy: 'bg-emerald-500/20 text-emerald-400',
         medium: 'bg-amber-500/20 text-amber-400',
@@ -106,6 +155,101 @@ export const TemplateMarketplace: React.FC<TemplateMarketplaceProps> = ({ onSele
                     onCancel={handleWizardCancel}
                     autoAnswers={autoAnswers}
                 />
+            )}
+
+            {/* Gerçek Çalıştırma Modal'ı */}
+            {showRunModal && selectedTemplate && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-[#0f172a] rounded-2xl border border-emerald-500/30 w-full max-w-xl">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                    ⚡ {selectedTemplate.name}
+                                </h2>
+                                <p className="text-xs text-slate-400 mt-1">AI ile gerçek içerik üret</p>
+                            </div>
+                            <button
+                                onClick={handleCloseRunModal}
+                                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6">
+                            {!runResult ? (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm text-slate-400 mb-2">
+                                            Girdi (konu, ürün adı, vs.)
+                                        </label>
+                                        <textarea
+                                            value={runInput}
+                                            onChange={(e) => setRunInput(e.target.value)}
+                                            className="w-full p-4 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            rows={4}
+                                            placeholder={`Örn: "${selectedTemplate.tags[0] || 'Yapay Zeka'}"`}
+                                        />
+                                    </div>
+
+                                    {runError && (
+                                        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                            <p className="text-red-400 text-sm">❌ {runError}</p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleRunReal}
+                                        disabled={isRunning || !runInput.trim()}
+                                        className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm hover:from-emerald-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isRunning ? (
+                                            <>
+                                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                                AI Çalışıyor...
+                                            </>
+                                        ) : (
+                                            <>⚡ ÇALIŞTIR</>
+                                        )}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-emerald-400 font-bold flex items-center gap-2">
+                                            ✅ Tamamlandı!
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(runResult);
+                                                    alert('Kopyalandı!');
+                                                }}
+                                                className="px-3 py-1 bg-slate-700 text-white rounded-lg text-xs hover:bg-slate-600"
+                                            >
+                                                📋 Kopyala
+                                            </button>
+                                            <button
+                                                onClick={() => { setRunResult(null); setRunInput(''); }}
+                                                className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs hover:bg-emerald-700"
+                                            >
+                                                🔄 Yeni
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 max-h-80 overflow-y-auto">
+                                        <pre className="text-sm text-slate-200 whitespace-pre-wrap font-sans">
+                                            {runResult}
+                                        </pre>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
 
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
@@ -212,17 +356,9 @@ export const TemplateMarketplace: React.FC<TemplateMarketplaceProps> = ({ onSele
                                             🚀 ŞABLONU KULLAN
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                // Gerçek Python kodunu göster
-                                                const realTemplates = ['blog-post-generator', 'instagram-caption-generator', 'etsy-seo-generator', 'tweet-generator', 'email-responder'];
-                                                if (realTemplates.includes(selectedTemplate.id)) {
-                                                    alert(`✅ Bu şablon GERÇEK çalışıyor!\n\n📁 Dosya: automations/real-automations/${selectedTemplate.id.replace(/-/g, '_')}.py\n\n💡 Kullanım:\n1. pip install -r requirements.txt\n2. .env dosyasına HUGGINGFACE_TOKEN ekle\n3. python ${selectedTemplate.id.replace(/-/g, '_')}.py`);
-                                                } else {
-                                                    alert('⚠️ Bu şablon henüz gerçek çalışan versiyona sahip değil.\n\nGerçek çalışan 5 şablon:\n• Blog Yazısı Üretici\n• Instagram Caption Üretici\n• Etsy SEO Üretici\n• Tweet Üretici\n• Email Yanıtlayıcı');
-                                                }
-                                            }}
+                                            onClick={() => setShowRunModal(true)}
                                             className="px-4 py-4 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all"
-                                            title="Gerçek Python kodunu çalıştır"
+                                            title="AI ile gerçek içerik üret"
                                         >
                                             ⚡ GERÇEK
                                         </button>
